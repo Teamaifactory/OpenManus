@@ -5,17 +5,29 @@ from pydantic import Field, model_validator
 from app.agent.browser import BrowserContextHelper
 from app.agent.toolcall import ToolCallAgent
 from app.config import config
-from app.daytona.sandbox import create_sandbox, delete_sandbox
-from app.daytona.tool_base import SandboxToolsBase
 from app.logger import logger
 from app.prompt.manus import NEXT_STEP_PROMPT, SYSTEM_PROMPT
 from app.tool import Terminate, ToolCollection
 from app.tool.ask_human import AskHuman
 from app.tool.mcp import MCPClients, MCPClientTool
-from app.tool.sandbox.sb_browser_tool import SandboxBrowserTool
-from app.tool.sandbox.sb_files_tool import SandboxFilesTool
-from app.tool.sandbox.sb_shell_tool import SandboxShellTool
-from app.tool.sandbox.sb_vision_tool import SandboxVisionTool
+
+try:
+    from app.daytona.sandbox import create_sandbox, delete_sandbox
+    from app.daytona.tool_base import SandboxToolsBase
+    from app.tool.sandbox.sb_browser_tool import SandboxBrowserTool
+    from app.tool.sandbox.sb_files_tool import SandboxFilesTool
+    from app.tool.sandbox.sb_shell_tool import SandboxShellTool
+    from app.tool.sandbox.sb_vision_tool import SandboxVisionTool
+    _DAYTONA_AVAILABLE = True
+except ImportError:
+    _DAYTONA_AVAILABLE = False
+    create_sandbox = None
+    delete_sandbox = None
+    SandboxToolsBase = None
+    SandboxBrowserTool = None
+    SandboxFilesTool = None
+    SandboxShellTool = None
+    SandboxVisionTool = None
 
 
 class SandboxManus(ToolCallAgent):
@@ -73,6 +85,9 @@ class SandboxManus(ToolCallAgent):
         self,
         password: str = config.daytona.VNC_password,
     ) -> None:
+        if not _DAYTONA_AVAILABLE:
+            logger.warning("Daytona package not installed — skipping sandbox tool initialization")
+            return
         try:
             # 创建新沙箱
             if password:
@@ -176,6 +191,9 @@ class SandboxManus(ToolCallAgent):
 
     async def delete_sandbox(self, sandbox_id: str) -> None:
         """Delete a sandbox by ID."""
+        if not _DAYTONA_AVAILABLE or delete_sandbox is None:
+            logger.warning("Daytona package not installed — cannot delete sandbox")
+            return
         try:
             await delete_sandbox(sandbox_id)
             logger.info(f"Sandbox {sandbox_id} deleted successfully")
@@ -203,8 +221,9 @@ class SandboxManus(ToolCallAgent):
 
         original_prompt = self.next_step_prompt
         recent_messages = self.memory.messages[-3:] if self.memory.messages else []
-        browser_in_use = any(
-            tc.function.name == SandboxBrowserTool().name
+        _sandbox_browser_name = SandboxBrowserTool().name if SandboxBrowserTool is not None else None
+        browser_in_use = _sandbox_browser_name is not None and any(
+            tc.function.name == _sandbox_browser_name
             for msg in recent_messages
             if msg.tool_calls
             for tc in msg.tool_calls

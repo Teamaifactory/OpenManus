@@ -7,13 +7,21 @@ from typing import Optional  # Add this import for Optional
 from PIL import Image
 from pydantic import Field
 
-from app.daytona.tool_base import (  # Ensure Sandbox is imported correctly
-    Sandbox,
-    SandboxToolsBase,
-    ThreadMessage,
-)
 from app.tool.base import ToolResult
 from app.utils.logger import logger
+
+try:
+    from app.daytona.tool_base import (  # Ensure Sandbox is imported correctly
+        Sandbox,
+        SandboxToolsBase,
+        ThreadMessage,
+    )
+    _DAYTONA_AVAILABLE = True
+except ImportError:
+    _DAYTONA_AVAILABLE = False
+    Sandbox = None
+    SandboxToolsBase = object
+    ThreadMessage = None
 
 
 # Context = TypeVar("Context")
@@ -448,3 +456,7 @@ class SandboxBrowserTool(SandboxToolsBase):
     def create_with_sandbox(cls, sandbox: Sandbox) -> "SandboxBrowserTool":
         """Factory method to create a tool with sandbox."""
         return cls(sandbox=sandbox)
+
+
+if not _DAYTONA_AVAILABLE:
+    SandboxBrowserTool = None
