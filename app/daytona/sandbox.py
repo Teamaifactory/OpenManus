@@ -1,14 +1,25 @@
 import time
 
-from daytona import (
-    CreateSandboxFromImageParams,
-    Daytona,
-    DaytonaConfig,
-    Resources,
-    Sandbox,
-    SandboxState,
-    SessionExecuteRequest,
-)
+try:
+    from daytona import (
+        CreateSandboxFromImageParams,
+        Daytona,
+        DaytonaConfig,
+        Resources,
+        Sandbox,
+        SandboxState,
+        SessionExecuteRequest,
+    )
+    _DAYTONA_AVAILABLE = True
+except ImportError:
+    _DAYTONA_AVAILABLE = False
+    CreateSandboxFromImageParams = None
+    Daytona = None
+    DaytonaConfig = None
+    Resources = None
+    Sandbox = None
+    SandboxState = None
+    SessionExecuteRequest = None
 
 from app.config import config
 from app.utils.logger import logger
@@ -16,30 +27,36 @@ from app.utils.logger import logger
 
 # load_dotenv()
 daytona_settings = config.daytona
-logger.info("Initializing Daytona sandbox configuration")
-daytona_config = DaytonaConfig(
-    api_key=daytona_settings.daytona_api_key,
-    server_url=daytona_settings.daytona_server_url,
-    target=daytona_settings.daytona_target,
-)
 
-if daytona_config.api_key:
-    logger.info("Daytona API key configured successfully")
+if _DAYTONA_AVAILABLE:
+    logger.info("Initializing Daytona sandbox configuration")
+    daytona_config = DaytonaConfig(
+        api_key=daytona_settings.daytona_api_key,
+        server_url=daytona_settings.daytona_server_url,
+        target=daytona_settings.daytona_target,
+    )
+
+    if daytona_config.api_key:
+        logger.info("Daytona API key configured successfully")
+    else:
+        logger.warning("No Daytona API key found in environment variables")
+
+    if daytona_config.server_url:
+        logger.info(f"Daytona server URL set to: {daytona_config.server_url}")
+    else:
+        logger.warning("No Daytona server URL found in environment variables")
+
+    if daytona_config.target:
+        logger.info(f"Daytona target set to: {daytona_config.target}")
+    else:
+        logger.warning("No Daytona target found in environment variables")
+
+    daytona = Daytona(daytona_config)
+    logger.info("Daytona client initialized")
 else:
-    logger.warning("No Daytona API key found in environment variables")
-
-if daytona_config.server_url:
-    logger.info(f"Daytona server URL set to: {daytona_config.server_url}")
-else:
-    logger.warning("No Daytona server URL found in environment variables")
-
-if daytona_config.target:
-    logger.info(f"Daytona target set to: {daytona_config.target}")
-else:
-    logger.warning("No Daytona target found in environment variables")
-
-daytona = Daytona(daytona_config)
-logger.info("Daytona client initialized")
+    logger.warning("Daytona package not installed — sandbox features will be unavailable")
+    daytona_config = None
+    daytona = None
 
 
 async def get_or_start_sandbox(sandbox_id: str):

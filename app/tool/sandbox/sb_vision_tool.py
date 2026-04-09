@@ -7,7 +7,14 @@ from typing import Optional
 from PIL import Image
 from pydantic import Field
 
-from app.daytona.tool_base import Sandbox, SandboxToolsBase, ThreadMessage
+try:
+    from app.daytona.tool_base import Sandbox, SandboxToolsBase, ThreadMessage
+    _DAYTONA_AVAILABLE = True
+except ImportError:
+    _DAYTONA_AVAILABLE = False
+    Sandbox = None
+    SandboxToolsBase = object
+    ThreadMessage = None
 from app.tool.base import ToolResult
 
 

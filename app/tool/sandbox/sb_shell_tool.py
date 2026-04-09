@@ -3,7 +3,13 @@ import time
 from typing import Any, Dict, Optional, TypeVar
 from uuid import uuid4
 
-from app.daytona.tool_base import Sandbox, SandboxToolsBase
+try:
+    from app.daytona.tool_base import Sandbox, SandboxToolsBase
+    _DAYTONA_AVAILABLE = True
+except ImportError:
+    _DAYTONA_AVAILABLE = False
+    Sandbox = None
+    SandboxToolsBase = object
 from app.tool.base import ToolResult
 from app.utils.logger import logger
 

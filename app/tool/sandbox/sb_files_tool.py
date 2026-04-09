@@ -3,7 +3,13 @@ from typing import Optional, TypeVar
 
 from pydantic import Field
 
-from app.daytona.tool_base import Sandbox, SandboxToolsBase
+try:
+    from app.daytona.tool_base import Sandbox, SandboxToolsBase
+    _DAYTONA_AVAILABLE = True
+except ImportError:
+    _DAYTONA_AVAILABLE = False
+    Sandbox = None
+    SandboxToolsBase = object
 from app.tool.base import ToolResult
 from app.utils.files_utils import clean_path, should_exclude_file
 from app.utils.logger import logger
