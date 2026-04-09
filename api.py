@@ -125,13 +125,7 @@ async def _get_agent():
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup: warm up the agent so the first request isn't slow.
-    try:
-        await _get_agent()
-    except Exception as exc:
-        logger.error(f"Failed to initialise Manus agent on startup: {exc}")
-        # Don't crash the server — the agent will be retried on first request.
-
+    # Don't initialize agent on startup - do it lazily on first request
     yield
 
     # Shutdown: clean up agent resources.
