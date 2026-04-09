@@ -1,4 +1,5 @@
 import json
+import os
 import threading
 import tomllib
 from pathlib import Path
@@ -225,10 +226,25 @@ class Config:
             return example_path
         raise FileNotFoundError("No configuration file found in config directory")
 
+    @staticmethod
+    def _expand_env_vars(data: dict) -> dict:
+        """Recursively expand values of the form 'env:VAR_NAME' from environment variables."""
+        result = {}
+        for key, value in data.items():
+            if isinstance(value, dict):
+                result[key] = Config._expand_env_vars(value)
+            elif isinstance(value, str) and value.startswith("env:"):
+                env_var = value[4:]
+                result[key] = os.environ.get(env_var, "")
+            else:
+                result[key] = value
+        return result
+
     def _load_config(self) -> dict:
         config_path = self._get_config_path()
         with config_path.open("rb") as f:
-            return tomllib.load(f)
+            raw = tomllib.load(f)
+        return self._expand_env_vars(raw)
 
     def _load_initial_config(self):
         raw_config = self._load_config()
