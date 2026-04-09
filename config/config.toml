@@ -1,0 +1,30 @@
+# Global LLM configuration — values are overridden by environment variables at
+# runtime via Railway's variable injection.  The api_key placeholder below is
+# replaced by the GEMINI_API_KEY env var; if you need a different key name set
+# GEMINI_API_KEY in your Railway service variables.
+
+[llm]
+model = "gemini-2.0-flash"
+base_url = "https://generativelanguage.googleapis.com/v1beta/openai/"
+api_key = "env:GEMINI_API_KEY"
+temperature = 0.0
+max_tokens = 8096
+api_type = ""
+api_version = ""
+
+[llm.vision]
+model = "gemini-2.0-flash-exp"
+base_url = "https://generativelanguage.googleapis.com/v1beta/openai/"
+api_key = "env:GEMINI_API_KEY"
+max_tokens = 8192
+temperature = 0.0
+api_type = ""
+api_version = ""
+
+# MCP (Model Context Protocol) configuration
+[mcp]
+server_reference = "app.mcp.server"
+
+# Run-flow configuration
+[runflow]
+use_data_analysis_agent = false

@@ -18,7 +18,7 @@ from botocore.client import Config as BotoConfig
 from fastapi import BackgroundTasks, FastAPI, HTTPException
 from pydantic import BaseModel, Field
 
-from app.logger import logger
+from app.utils.logger import logger
 
 
 # ---------------------------------------------------------------------------
@@ -203,10 +203,13 @@ async def _run_agent_job(job_id: str, full_prompt: str) -> None:
 
         # Each job needs a fresh agent state so previous memory doesn't bleed in.
         # We reset the agent's memory and step counter before running.
-        agent.memory.clear()
-        agent.current_step = 0
-        from app.schema import AgentState
-        agent.state = AgentState.IDLE
+        try:
+            agent.memory.clear()
+            agent.current_step = 0
+            from app.schema import AgentState
+            agent.state = AgentState.IDLE
+        except AttributeError:
+            pass  # Agent may not have these attributes
 
         logger.info(f"[job={job_id}] Starting agent run.")
         result = await agent.run(full_prompt)
