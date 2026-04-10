@@ -1,5 +1,6 @@
 from fastapi import FastAPI
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, FileResponse
+from fastapi.staticfiles import StaticFiles
 import os
 import logging
 
@@ -7,6 +8,11 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 app = FastAPI(title="OpenManus", version="1.0.0")
+
+# Serve static files
+static_dir = os.path.join(os.path.dirname(__file__), "static")
+if os.path.exists(static_dir):
+    app.mount("/static", StaticFiles(directory=static_dir), name="static")
 
 # Global agent state (will be initialized lazily)
 _agent = None
@@ -21,16 +27,13 @@ async def health():
 
 @app.get("/")
 async def root():
-    """Root endpoint"""
-    return JSONResponse(
-        status_code=200,
-        content={
-            "name": "OpenManus",
-            "version": "1.0.0",
-            "status": "running",
-            "message": "Welcome to OpenManus - AI Video Generation Pipeline"
-        }
-    )
+    """Root endpoint - serve the dashboard"""
+    return FileResponse(os.path.join(static_dir, "index.html"))
+
+@app.get("/dashboard")
+async def dashboard():
+    """Serve the dashboard"""
+    return FileResponse(os.path.join(static_dir, "index.html"))
 
 @app.get("/api/status")
 async def status():

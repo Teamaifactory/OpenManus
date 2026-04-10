@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpenManus - AI Video Generator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 600px;
+            width: 100%;
+            padding: 40px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .logo {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+
+        h1 {
+            color: #333;
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 16px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            color: #333;
+            font-weight: 600;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+
+        textarea {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-family: inherit;
+            font-size: 16px;
+            resize: vertical;
+            min-height: 120px;
+            transition: border-color 0.3s;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        button {
+            flex: 1;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-submit {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-submit:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-clear {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .btn-clear:hover {
+            background: #e0e0e0;
+        }
+
+        .status-section {
+            margin-top: 30px;
+            padding-top: 30px;
+            border-top: 2px solid #f0f0f0;
+        }
+
+        .status-box {
+            background: #f9f9f9;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            display: none;
+        }
+
+        .status-box.show {
+            display: block;
+        }
+
+        .status-label {
+            color: #666;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 5px;
+        }
+
+        .status-value {
+            color: #333;
+            font-size: 16px;
+            font-weight: 600;
+            word-break: break-all;
+        }
+
+        .status-pending {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+        }
+
+        .status-success {
+            background: #d4edda;
+            border-left: 4px solid #28a745;
+        }
+
+        .status-error {
+            background: #f8d7da;
+            border-left: 4px solid #dc3545;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 8px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .message {
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            display: none;
+        }
+
+        .message.show {
+            display: block;
+        }
+
+        .message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            color: #999;
+            font-size: 12px;
+        }
+
+        .api-status {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #28a745;
+            margin-right: 5px;
+        }
+
+        .api-status.offline {
+            background: #dc3545;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">🐢</div>
+            <h1>OpenManus</h1>
+            <p class="subtitle">AI-Powered Video Generation Pipeline</p>
+        </div>
+
+        <div id="message" class="message"></div>
+
+        <form id="videoForm">
+            <div class="form-group">
+                <label for="prompt">Describe Your Video Idea</label>
+                <textarea 
+                    id="prompt" 
+                    placeholder="Example: A wise old turtle sharing ancient wisdom about life and happiness..."
+                    required
+                ></textarea>
+            </div>
+
+            <div class="button-group">
+                <button type="submit" class="btn-submit" id="submitBtn">
+                    Create Video
+                </button>
+                <button type="button" class="btn-clear" id="clearBtn">
+                    Clear
+                </button>
+            </div>
+        </form>
+
+        <div class="status-section">
+            <div id="statusBox" class="status-box">
+                <div class="status-label">Status</div>
+                <div class="status-value" id="statusValue"></div>
+            </div>
+
+            <div id="resultBox" class="status-box">
+                <div class="status-label">Result</div>
+                <div class="status-value" id="resultValue"></div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <span class="api-status" id="apiStatus"></span>
+            <span id="apiStatusText">Checking API...</span>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('videoForm');
+        const promptInput = document.getElementById('prompt');
+        const submitBtn = document.getElementById('submitBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const messageDiv = document.getElementById('message');
+        const statusBox = document.getElementById('statusBox');
+        const statusValue = document.getElementById('statusValue');
+        const resultBox = document.getElementById('resultBox');
+        const resultValue = document.getElementById('resultValue');
+        const apiStatus = document.getElementById('apiStatus');
+        const apiStatusText = document.getElementById('apiStatusText');
+
+        // Check API status on load
+        checkApiStatus();
+        setInterval(checkApiStatus, 30000); // Check every 30 seconds
+
+        async function checkApiStatus() {
+            try {
+                const response = await fetch('/api/status');
+                if (response.ok) {
+                    apiStatus.classList.remove('offline');
+                    apiStatusText.textContent = 'API Online';
+                } else {
+                    apiStatus.classList.add('offline');
+                    apiStatusText.textContent = 'API Offline';
+                }
+            } catch (error) {
+                apiStatus.classList.add('offline');
+                apiStatusText.textContent = 'API Offline';
+            }
+        }
+
+        clearBtn.addEventListener('click', () => {
+            promptInput.value = '';
+            messageDiv.classList.remove('show');
+            statusBox.classList.remove('show');
+            resultBox.classList.remove('show');
+            promptInput.focus();
+        });
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const prompt = promptInput.value.trim();
+            if (!prompt) {
+                showMessage('Please enter a video idea', 'error');
+                return;
+            }
+
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="spinner"></span>Creating...';
+            messageDiv.classList.remove('show');
+            statusBox.classList.remove('show');
+            resultBox.classList.remove('show');
+
+            try {
+                const response = await fetch('/api/create-video', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: `prompt=${encodeURIComponent(prompt)}`
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    showMessage('Video creation request submitted! 🎬', 'success');
+                    
+                    statusValue.textContent = data.status || 'pending';
+                    statusBox.classList.add('show');
+                    
+                    if (data.message) {
+                        resultValue.textContent = data.message;
+                        resultBox.classList.add('show');
+                    }
+                    
+                    promptInput.value = '';
+                } else {
+                    showMessage('Failed to create video. Please try again.', 'error');
+                }
+            } catch (error) {
+                showMessage('Error: ' + error.message, 'error');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = 'Create Video';
+            }
+        });
+
+        function showMessage(text, type) {
+            messageDiv.textContent = text;
+            messageDiv.className = `message show ${type}`;
+        }
+    </script>
+</body>
+</html>
