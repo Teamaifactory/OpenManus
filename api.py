@@ -11,6 +11,8 @@ from pathlib import Path
 
 from openai import AsyncOpenAI
 
+from app.agent import CapableAgent
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -104,20 +106,20 @@ class SimpleLLMAgent:
 
 
 # Module-level singleton — created once on first request
-_simple_agent: Optional[SimpleLLMAgent] = None
+_capable_agent: Optional[CapableAgent] = None
 
 
-def get_simple_agent() -> SimpleLLMAgent:
-    """Return (and lazily create) the module-level SimpleLLMAgent."""
-    global _simple_agent
-    if _simple_agent is None:
-        _simple_agent = SimpleLLMAgent(config_name="default")
+def get_capable_agent() -> CapableAgent:
+    """Return (and lazily create) the module-level CapableAgent."""
+    global _capable_agent
+    if _capable_agent is None:
+        _capable_agent = CapableAgent(config_name="default")
         logger.info(
-            "SimpleLLMAgent initialised (model=%s, base_url=%s)",
-            _simple_agent.model,
-            _simple_agent.base_url,
+            "CapableAgent initialised (model=%s, base_url=%s)",
+            _capable_agent.model,
+            _capable_agent.base_url,
         )
-    return _simple_agent
+    return _capable_agent
 
 
 @app.get("/health")
@@ -125,7 +127,7 @@ async def health():
     """Health check endpoint - responds immediately"""
     return JSONResponse(
         status_code=200,
-        content={"status": "ok", "agent_ready": _simple_agent is not None}
+        content={"status": "ok", "agent_ready": _capable_agent is not None}
     )
 
 @app.get("/")
@@ -146,7 +148,7 @@ async def status():
         content={
             "service": "OpenManus",
             "status": "online",
-            "agent_initialized": _simple_agent is not None,
+            "agent_initialized": _capable_agent is not None,
             "environment": {
                 "has_gemini_key": bool(os.getenv("GEMINI_API_KEY")),
                 "has_claude_key": bool(os.getenv("CLAUDE_API_KEY")),
@@ -208,12 +210,12 @@ async def chat(
     full_prompt = "\n".join(prompt_parts)
 
     try:
-        agent = get_simple_agent()
-        logger.info("Running SimpleLLMAgent with prompt: %s...", full_prompt[:200])
+        agent = get_capable_agent()
+        logger.info("Running CapableAgent with prompt: %s...", full_prompt[:200])
 
         result = await agent.chat(full_prompt)
 
-        logger.info("SimpleLLMAgent completed successfully")
+        logger.info("CapableAgent completed successfully")
         return JSONResponse(
             status_code=200,
             content={
