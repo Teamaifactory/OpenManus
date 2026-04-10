@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OpenManus - AI Video Generator</title>
+    <title>OpenManus - AI Assistant</title>
     <style>
         * {
             margin: 0;
@@ -21,493 +21,733 @@
             padding: 20px;
         }
 
-        .container {
+        .app-shell {
             background: white;
             border-radius: 20px;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            max-width: 600px;
             width: 100%;
-            padding: 40px;
+            max-width: 820px;
+            height: 90vh;
+            max-height: 860px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
         }
 
+        /* ── Header ── */
         .header {
-            text-align: center;
-            margin-bottom: 40px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 18px 24px;
+            border-bottom: 1px solid #f0f0f0;
+            flex-shrink: 0;
         }
 
         .logo {
-            font-size: 48px;
-            margin-bottom: 10px;
-        }
-
-        h1 {
-            color: #333;
             font-size: 32px;
-            margin-bottom: 10px;
+            line-height: 1;
         }
 
-        .subtitle {
-            color: #666;
-            font-size: 16px;
+        .header-text h1 {
+            font-size: 20px;
+            font-weight: 700;
+            color: #1a1a2e;
         }
 
-        .form-group {
-            margin-bottom: 25px;
+        .header-text p {
+            font-size: 13px;
+            color: #888;
+            margin-top: 2px;
         }
 
-        label {
-            display: block;
-            color: #333;
-            font-weight: 600;
-            margin-bottom: 10px;
-            font-size: 14px;
-        }
-
-        textarea {
-            width: 100%;
-            padding: 15px;
-            border: 2px solid #e0e0e0;
-            border-radius: 10px;
-            font-family: inherit;
-            font-size: 16px;
-            resize: vertical;
-            min-height: 120px;
-            transition: border-color 0.3s;
-        }
-
-        textarea:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-
-        .button-group {
+        .header-status {
+            margin-left: auto;
             display: flex;
-            gap: 10px;
-        }
-
-        button {
-            flex: 1;
-            padding: 15px 30px;
-            border: none;
-            border-radius: 10px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-
-        .btn-submit {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-        }
-
-        .btn-submit:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
-        }
-
-        .btn-submit:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        .btn-clear {
-            background: #f0f0f0;
-            color: #333;
-        }
-
-        .btn-clear:hover {
-            background: #e0e0e0;
-        }
-
-        .status-section {
-            margin-top: 30px;
-            padding-top: 30px;
-            border-top: 2px solid #f0f0f0;
-        }
-
-        .status-box {
-            background: #f9f9f9;
-            padding: 20px;
-            border-radius: 10px;
-            margin-bottom: 15px;
-            display: none;
-        }
-
-        .status-box.show {
-            display: block;
-        }
-
-        .status-label {
-            color: #666;
+            align-items: center;
+            gap: 6px;
             font-size: 12px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 5px;
+            color: #888;
         }
 
-        .status-value {
-            color: #333;
-            font-size: 16px;
-            font-weight: 600;
-            word-break: break-all;
-        }
-
-        .status-pending {
-            background: #fff3cd;
-            border-left: 4px solid #ffc107;
-        }
-
-        .status-success {
-            background: #d4edda;
-            border-left: 4px solid #28a745;
-        }
-
-        .status-error {
-            background: #f8d7da;
-            border-left: 4px solid #dc3545;
-        }
-
-        .spinner {
-            display: inline-block;
-            width: 16px;
-            height: 16px;
-            border: 3px solid #f3f3f3;
-            border-top: 3px solid #667eea;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin-right: 8px;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        .message {
-            padding: 15px;
-            border-radius: 10px;
-            margin-bottom: 15px;
-            display: none;
-        }
-
-        .message.show {
-            display: block;
-        }
-
-        .message.success {
-            background: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-
-        .message.error {
-            background: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-
-        .footer {
-            text-align: center;
-            margin-top: 30px;
-            color: #999;
-            font-size: 12px;
-        }
-
-        .api-status {
-            display: inline-block;
-            width: 10px;
-            height: 10px;
+        .status-dot {
+            width: 8px;
+            height: 8px;
             border-radius: 50%;
             background: #28a745;
-            margin-right: 5px;
+            flex-shrink: 0;
         }
 
-        .api-status.offline {
+        .status-dot.offline {
             background: #dc3545;
         }
 
-        .file-upload-section {
-            margin-bottom: 25px;
-        }
-
-        .file-upload-area {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 15px;
-        }
-
-        .btn-add-file {
+        /* ── Conversation area ── */
+        .conversation {
             flex: 1;
-            padding: 12px 20px;
-            background: #f0f0f0;
-            color: #333;
-            border: 2px dashed #667eea;
-            border-radius: 10px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-
-        .btn-add-file:hover {
-            background: #f9f9f9;
-            border-color: #764ba2;
-        }
-
-        .file-list {
+            overflow-y: auto;
+            padding: 24px;
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            gap: 20px;
+            scroll-behavior: smooth;
         }
 
-        .file-item {
+        .conversation::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .conversation::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .conversation::-webkit-scrollbar-thumb {
+            background: #ddd;
+            border-radius: 3px;
+        }
+
+        /* Empty state */
+        .empty-state {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: #aaa;
+            gap: 12px;
+            padding: 40px;
+        }
+
+        .empty-state .empty-icon {
+            font-size: 52px;
+        }
+
+        .empty-state h2 {
+            font-size: 20px;
+            font-weight: 600;
+            color: #555;
+        }
+
+        .empty-state p {
+            font-size: 14px;
+            max-width: 380px;
+            line-height: 1.6;
+        }
+
+        .suggestion-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: center;
+            margin-top: 8px;
+        }
+
+        .chip {
+            padding: 8px 14px;
+            background: #f4f4f8;
+            border: 1px solid #e8e8f0;
+            border-radius: 20px;
+            font-size: 13px;
+            color: #555;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .chip:hover {
+            background: #ede9ff;
+            border-color: #667eea;
+            color: #667eea;
+        }
+
+        /* Message bubbles */
+        .message-row {
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+            animation: fadeSlideIn 0.25s ease;
+        }
+
+        @keyframes fadeSlideIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        .message-row.user {
+            flex-direction: row-reverse;
+        }
+
+        .avatar {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
             display: flex;
             align-items: center;
-            justify-content: space-between;
-            padding: 10px 12px;
-            background: #f9f9f9;
-            border-radius: 8px;
-            border-left: 3px solid #667eea;
+            justify-content: center;
+            font-size: 16px;
+            flex-shrink: 0;
+        }
+
+        .avatar.agent {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .avatar.user-av {
+            background: #f0f0f0;
+        }
+
+        .bubble-wrap {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            max-width: 72%;
+        }
+
+        .message-row.user .bubble-wrap {
+            align-items: flex-end;
+        }
+
+        .bubble {
+            padding: 12px 16px;
+            border-radius: 18px;
             font-size: 14px;
+            line-height: 1.6;
+            word-break: break-word;
+            white-space: pre-wrap;
         }
 
-        .file-item-name {
-            flex: 1;
-            color: #333;
-            word-break: break-all;
+        .bubble.user-bubble {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-bottom-right-radius: 4px;
         }
 
-        .file-item-size {
-            color: #999;
+        .bubble.agent-bubble {
+            background: #f4f4f8;
+            color: #1a1a2e;
+            border-bottom-left-radius: 4px;
+        }
+
+        .bubble.error-bubble {
+            background: #fff0f0;
+            color: #c0392b;
+            border: 1px solid #ffd5d5;
+            border-bottom-left-radius: 4px;
+        }
+
+        .bubble-meta {
+            font-size: 11px;
+            color: #bbb;
+            padding: 0 4px;
+        }
+
+        /* File attachment tags inside bubble */
+        .file-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 8px;
+        }
+
+        .file-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 3px 10px;
+            background: rgba(255,255,255,0.25);
+            border-radius: 12px;
             font-size: 12px;
-            margin: 0 10px;
         }
 
-        .btn-remove-file {
+        .bubble.agent-bubble .file-tag {
+            background: rgba(102,126,234,0.12);
+            color: #667eea;
+        }
+
+        /* Typing indicator */
+        .typing-indicator {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            padding: 12px 16px;
+            background: #f4f4f8;
+            border-radius: 18px;
+            border-bottom-left-radius: 4px;
+            width: fit-content;
+        }
+
+        .typing-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: #aaa;
+            animation: typingBounce 1.2s infinite ease-in-out;
+        }
+
+        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes typingBounce {
+            0%, 60%, 100% { transform: translateY(0); }
+            30%            { transform: translateY(-6px); }
+        }
+
+        /* ── Input area ── */
+        .input-area {
+            border-top: 1px solid #f0f0f0;
+            padding: 16px 20px;
+            flex-shrink: 0;
+            background: white;
+        }
+
+        /* Staged file list */
+        .staged-files {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .staged-file {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 5px 10px;
+            background: #f4f4f8;
+            border: 1px solid #e0e0f0;
+            border-radius: 20px;
+            font-size: 13px;
+            color: #444;
+        }
+
+        .staged-file-remove {
             background: none;
             border: none;
-            color: #dc3545;
             cursor: pointer;
-            font-size: 18px;
+            color: #aaa;
+            font-size: 15px;
             padding: 0;
-            width: 24px;
-            height: 24px;
+            line-height: 1;
+            display: flex;
+            align-items: center;
+            transition: color 0.15s;
+        }
+
+        .staged-file-remove:hover {
+            color: #dc3545;
+        }
+
+        /* Composer row */
+        .composer {
+            display: flex;
+            align-items: flex-end;
+            gap: 10px;
+            background: #f7f7fb;
+            border: 2px solid #e8e8f0;
+            border-radius: 14px;
+            padding: 8px 8px 8px 14px;
+            transition: border-color 0.2s;
+        }
+
+        .composer:focus-within {
+            border-color: #667eea;
+        }
+
+        .composer-textarea {
+            flex: 1;
+            border: none;
+            background: transparent;
+            font-family: inherit;
+            font-size: 15px;
+            line-height: 1.5;
+            resize: none;
+            outline: none;
+            max-height: 160px;
+            min-height: 24px;
+            color: #1a1a2e;
+        }
+
+        .composer-textarea::placeholder {
+            color: #bbb;
+        }
+
+        .composer-actions {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-shrink: 0;
+        }
+
+        .btn-attach {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #aaa;
+            font-size: 20px;
+            padding: 4px;
+            border-radius: 8px;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-attach:hover {
+            color: #667eea;
+            background: #ede9ff;
+        }
+
+        .btn-send {
+            width: 38px;
+            height: 38px;
+            border: none;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-size: 18px;
+            cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
             transition: all 0.2s;
+            flex-shrink: 0;
         }
 
-        .btn-remove-file:hover {
-            color: #c82333;
-            transform: scale(1.2);
+        .btn-send:hover:not(:disabled) {
+            transform: scale(1.08);
+            box-shadow: 0 4px 14px rgba(102, 126, 234, 0.45);
+        }
+
+        .btn-send:disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .input-hint {
+            font-size: 11px;
+            color: #ccc;
+            text-align: right;
+            margin-top: 6px;
+        }
+
+        /* Hidden file input */
+        #fileInput {
+            display: none;
         }
     </style>
 </head>
 <body>
-    <div class="container">
+    <div class="app-shell">
+
+        <!-- Header -->
         <div class="header">
             <div class="logo">🐢</div>
-            <h1>OpenManus</h1>
-            <p class="subtitle">AI-Powered Video Generation Pipeline</p>
+            <div class="header-text">
+                <h1>OpenManus</h1>
+                <p>General-purpose AI assistant</p>
+            </div>
+            <div class="header-status">
+                <span class="status-dot" id="statusDot"></span>
+                <span id="statusText">Checking…</span>
+            </div>
         </div>
 
-        <div id="message" class="message"></div>
-
-        <form id="videoForm">
-            <div class="form-group">
-                <label for="prompt">Describe Your Video Idea</label>
-                <textarea 
-                    id="prompt" 
-                    placeholder="Example: A wise old turtle sharing ancient wisdom about life and happiness..."
-                    required
-                ></textarea>
+        <!-- Conversation -->
+        <div class="conversation" id="conversation">
+            <div class="empty-state" id="emptyState">
+                <div class="empty-icon">🐢</div>
+                <h2>How can I help you today?</h2>
+                <p>Ask me to create something, analyze files, write code, browse the web, or help with any project.</p>
+                <div class="suggestion-chips">
+                    <span class="chip" data-prompt="Write a Python script that reads a CSV file and generates a summary report">Write a Python script</span>
+                    <span class="chip" data-prompt="Create a simple HTML landing page for a coffee shop">Create a landing page</span>
+                    <span class="chip" data-prompt="Explain how large language models work in simple terms">Explain LLMs</span>
+                    <span class="chip" data-prompt="Help me brainstorm ideas for a mobile app">Brainstorm app ideas</span>
+                </div>
             </div>
+        </div>
 
-            <div class="file-upload-section">
-                <label for="fileInput">Attach Files (Optional)</label>
-                <div class="file-upload-area">
-                    <input 
-                        type="file" 
-                        id="fileInput" 
-                        multiple 
-                        accept="image/*,video/*,.pdf,.doc,.docx,.txt"
-                        style="display: none;"
-                    >
-                    <button type="button" class="btn-add-file" id="addFileBtn">
-                        + Add Files
+        <!-- Input area -->
+        <div class="input-area">
+            <div class="staged-files" id="stagedFiles"></div>
+            <div class="composer">
+                <textarea
+                    class="composer-textarea"
+                    id="messageInput"
+                    placeholder="Ask me to create something, analyze files, or help with your project…"
+                    rows="1"
+                ></textarea>
+                <div class="composer-actions">
+                    <button class="btn-attach" id="attachBtn" title="Attach files" type="button">📎</button>
+                    <button class="btn-send" id="sendBtn" title="Send message" type="button" disabled>
+                        ➤
                     </button>
                 </div>
-                <div id="fileList" class="file-list"></div>
             </div>
-
-            <div class="button-group">
-                <button type="submit" class="btn-submit" id="submitBtn">
-                    Create Video
-                </button>
-                <button type="button" class="btn-clear" id="clearBtn">
-                    Clear
-                </button>
-            </div>
-        </form>
-
-        <div class="status-section">
-            <div id="statusBox" class="status-box">
-                <div class="status-label">Status</div>
-                <div class="status-value" id="statusValue"></div>
-            </div>
-
-            <div id="resultBox" class="status-box">
-                <div class="status-label">Result</div>
-                <div class="status-value" id="resultValue"></div>
-            </div>
+            <div class="input-hint">Press Enter to send &nbsp;·&nbsp; Shift+Enter for new line</div>
         </div>
 
-        <div class="footer">
-            <span class="api-status" id="apiStatus"></span>
-            <span id="apiStatusText">Checking API...</span>
-        </div>
     </div>
 
+    <!-- Hidden file input -->
+    <input type="file" id="fileInput" multiple accept="image/*,video/*,.pdf,.doc,.docx,.txt,.md,.csv,.json,.py,.js,.ts,.html,.css">
+
     <script>
-        const form = document.getElementById('videoForm');
-        const promptInput = document.getElementById('prompt');
-        const submitBtn = document.getElementById('submitBtn');
-        const clearBtn = document.getElementById('clearBtn');
-        const messageDiv = document.getElementById('message');
-        const statusBox = document.getElementById('statusBox');
-        const statusValue = document.getElementById('statusValue');
-        const resultBox = document.getElementById('resultBox');
-        const resultValue = document.getElementById('resultValue');
-        const apiStatus = document.getElementById('apiStatus');
-        const apiStatusText = document.getElementById('apiStatusText');
-        const fileInput = document.getElementById('fileInput');
-        const addFileBtn = document.getElementById('addFileBtn');
-        const fileList = document.getElementById('fileList');
-        let selectedFiles = [];
+        // ── DOM refs ──────────────────────────────────────────────────────────
+        const conversation  = document.getElementById('conversation');
+        const emptyState    = document.getElementById('emptyState');
+        const messageInput  = document.getElementById('messageInput');
+        const sendBtn       = document.getElementById('sendBtn');
+        const attachBtn     = document.getElementById('attachBtn');
+        const fileInput     = document.getElementById('fileInput');
+        const stagedFiles   = document.getElementById('stagedFiles');
+        const statusDot     = document.getElementById('statusDot');
+        const statusText    = document.getElementById('statusText');
 
-        addFileBtn.addEventListener('click', () => {
-            fileInput.click();
+        let pendingFiles = [];   // Files staged for the next message
+        let isWaiting    = false; // True while waiting for agent response
+
+        // ── Suggestion chips ──────────────────────────────────────────────────
+        document.querySelectorAll('.chip').forEach(chip => {
+            chip.addEventListener('click', () => {
+                messageInput.value = chip.dataset.prompt;
+                autoResize();
+                updateSendBtn();
+                messageInput.focus();
+            });
         });
 
-        fileInput.addEventListener('change', (e) => {
+        // ── API status polling ────────────────────────────────────────────────
+        checkStatus();
+        setInterval(checkStatus, 30000);
+
+        async function checkStatus() {
+            try {
+                const res = await fetch('/api/status');
+                if (res.ok) {
+                    statusDot.classList.remove('offline');
+                    statusText.textContent = 'Online';
+                } else {
+                    throw new Error('non-ok');
+                }
+            } catch {
+                statusDot.classList.add('offline');
+                statusText.textContent = 'Offline';
+            }
+        }
+
+        // ── Textarea auto-resize ──────────────────────────────────────────────
+        function autoResize() {
+            messageInput.style.height = 'auto';
+            messageInput.style.height = Math.min(messageInput.scrollHeight, 160) + 'px';
+        }
+
+        function updateSendBtn() {
+            sendBtn.disabled = isWaiting || messageInput.value.trim() === '';
+        }
+
+        messageInput.addEventListener('input', () => {
+            autoResize();
+            updateSendBtn();
+        });
+
+        messageInput.addEventListener('keydown', e => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                if (!sendBtn.disabled) sendMessage();
+            }
+        });
+
+        // ── File attachment ───────────────────────────────────────────────────
+        attachBtn.addEventListener('click', () => fileInput.click());
+
+        fileInput.addEventListener('change', e => {
             const newFiles = Array.from(e.target.files);
-            selectedFiles = [...selectedFiles, ...newFiles];
-            updateFileList();
-            fileInput.value = ''; // Reset input
+            pendingFiles = [...pendingFiles, ...newFiles];
+            renderStagedFiles();
+            fileInput.value = '';
         });
 
-        function updateFileList() {
-            fileList.innerHTML = '';
-            selectedFiles.forEach((file, index) => {
-                const fileSize = (file.size / 1024).toFixed(2); // Convert to KB
-                const fileItem = document.createElement('div');
-                fileItem.className = 'file-item';
-                fileItem.innerHTML = `
-                    <span class="file-item-name">📎 ${file.name}</span>
-                    <span class="file-item-size">${fileSize} KB</span>
-                    <button type="button" class="btn-remove-file" data-index="${index}">×</button>
+        function renderStagedFiles() {
+            stagedFiles.innerHTML = '';
+            pendingFiles.forEach((file, idx) => {
+                const tag = document.createElement('div');
+                tag.className = 'staged-file';
+                tag.innerHTML = `
+                    <span>${fileIcon(file.name)} ${file.name}</span>
+                    <button class="staged-file-remove" data-idx="${idx}" title="Remove">×</button>
                 `;
-
-                fileItem.querySelector('.btn-remove-file').addEventListener('click', (e) => {
-                    e.preventDefault();
-                    selectedFiles.splice(index, 1);
-                    updateFileList();
+                tag.querySelector('.staged-file-remove').addEventListener('click', () => {
+                    pendingFiles.splice(idx, 1);
+                    renderStagedFiles();
                 });
-
-                fileList.appendChild(fileItem);
+                stagedFiles.appendChild(tag);
             });
         }
 
-        // Check API status on load
-        checkApiStatus();
-        setInterval(checkApiStatus, 30000); // Check every 30 seconds
+        function fileIcon(name) {
+            const ext = name.split('.').pop().toLowerCase();
+            const map = {
+                pdf: '📄', doc: '📝', docx: '📝', txt: '📃', md: '📃',
+                csv: '📊', json: '📋', py: '🐍', js: '📜', ts: '📜',
+                html: '🌐', css: '🎨', png: '🖼️', jpg: '🖼️', jpeg: '🖼️',
+                gif: '🖼️', webp: '🖼️', mp4: '🎬', mov: '🎬', avi: '🎬',
+            };
+            return map[ext] || '📎';
+        }
 
-        async function checkApiStatus() {
+        // ── Send message ──────────────────────────────────────────────────────
+        sendBtn.addEventListener('click', sendMessage);
+
+        async function sendMessage() {
+            const text = messageInput.value.trim();
+            if (!text || isWaiting) return;
+
+            const files = [...pendingFiles];
+
+            // Clear input
+            messageInput.value = '';
+            pendingFiles = [];
+            renderStagedFiles();
+            autoResize();
+
+            // Hide empty state
+            emptyState.style.display = 'none';
+
+            // Render user bubble
+            appendUserMessage(text, files);
+
+            // Show typing indicator
+            const typingRow = appendTypingIndicator();
+
+            isWaiting = true;
+            updateSendBtn();
+
             try {
-                const response = await fetch('/api/status');
-                if (response.ok) {
-                    apiStatus.classList.remove('offline');
-                    apiStatusText.textContent = 'API Online';
+                const formData = new FormData();
+                formData.append('message', text);
+                files.forEach(f => formData.append('files', f));
+
+                const res = await fetch('/api/chat', {
+                    method: 'POST',
+                    body: formData,
+                });
+
+                const data = await res.json();
+                typingRow.remove();
+
+                if (res.ok && data.status === 'success') {
+                    appendAgentMessage(data.response, data.files_received || []);
                 } else {
-                    apiStatus.classList.add('offline');
-                    apiStatusText.textContent = 'API Offline';
+                    const errText = data.response || data.message || 'Something went wrong. Please try again.';
+                    appendAgentMessage(errText, [], true);
                 }
-            } catch (error) {
-                apiStatus.classList.add('offline');
-                apiStatusText.textContent = 'API Offline';
+            } catch (err) {
+                typingRow.remove();
+                appendAgentMessage(`Network error: ${err.message}`, [], true);
+            } finally {
+                isWaiting = false;
+                updateSendBtn();
+                messageInput.focus();
             }
         }
 
-        clearBtn.addEventListener('click', () => {
-            promptInput.value = '';
-            selectedFiles = [];
-            updateFileList();
-            messageDiv.classList.remove('show');
-            statusBox.classList.remove('show');
-            resultBox.classList.remove('show');
-            promptInput.focus();
-        });
+        // ── Render helpers ────────────────────────────────────────────────────
+        function appendUserMessage(text, files) {
+            const row = document.createElement('div');
+            row.className = 'message-row user';
 
-        form.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const prompt = promptInput.value.trim();
-            if (!prompt) {
-                showMessage('Please enter a video idea', 'error');
-                return;
-            }
+            const fileTags = files.length
+                ? `<div class="file-tags">${files.map(f => `<span class="file-tag">${fileIcon(f.name)} ${f.name}</span>`).join('')}</div>`
+                : '';
 
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = '<span class="spinner"></span>Creating...';
-            messageDiv.classList.remove('show');
-            statusBox.classList.remove('show');
-            resultBox.classList.remove('show');
+            row.innerHTML = `
+                <div class="avatar user-av">🧑</div>
+                <div class="bubble-wrap">
+                    <div class="bubble user-bubble">${escapeHtml(text)}${fileTags}</div>
+                    <div class="bubble-meta">${formatTime(new Date())}</div>
+                </div>
+            `;
+            conversation.appendChild(row);
+            scrollToBottom();
+        }
 
-            try {
-                const response = await fetch('/api/create-video', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                    },
-                    body: `prompt=${encodeURIComponent(prompt)}`
-                });
+        function appendAgentMessage(text, filesReceived, isError = false) {
+            const row = document.createElement('div');
+            row.className = 'message-row';
 
-                if (response.ok) {
-                    const data = await response.json();
-                    let fileInfo = '';
-                    if (selectedFiles.length > 0) {
-                        fileInfo = ` (with ${selectedFiles.length} file${selectedFiles.length > 1 ? 's' : ''})`;
-                    }
-                    showMessage(`Video creation request submitted${fileInfo}! 🎬`, 'success');
-                    
-                    statusValue.textContent = data.status || 'pending';
-                    statusBox.classList.add('show');
-                    
-                    if (data.message) {
-                        resultValue.textContent = data.message;
-                        resultBox.classList.add('show');
-                    }
-                    
-                    promptInput.value = '';
-                    selectedFiles = [];
-                    updateFileList();
-                } else {
-                    showMessage('Failed to create video. Please try again.', 'error');
-                }
-            } catch (error) {
-                showMessage('Error: ' + error.message, 'error');
-            } finally {
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = 'Create Video';
-            }
-        });
+            const bubbleClass = isError ? 'error-bubble' : 'agent-bubble';
 
-        function showMessage(text, type) {
-            messageDiv.textContent = text;
-            messageDiv.className = `message show ${type}`;
+            const fileTags = filesReceived.length
+                ? `<div class="file-tags">${filesReceived.map(n => `<span class="file-tag">${fileIcon(n)} ${n}</span>`).join('')}</div>`
+                : '';
+
+            row.innerHTML = `
+                <div class="avatar agent">🐢</div>
+                <div class="bubble-wrap">
+                    <div class="bubble ${bubbleClass}">${formatResponse(text)}${fileTags}</div>
+                    <div class="bubble-meta">${formatTime(new Date())}</div>
+                </div>
+            `;
+            conversation.appendChild(row);
+            scrollToBottom();
+        }
+
+        function appendTypingIndicator() {
+            const row = document.createElement('div');
+            row.className = 'message-row';
+            row.innerHTML = `
+                <div class="avatar agent">🐢</div>
+                <div class="bubble-wrap">
+                    <div class="typing-indicator">
+                        <div class="typing-dot"></div>
+                        <div class="typing-dot"></div>
+                        <div class="typing-dot"></div>
+                    </div>
+                </div>
+            `;
+            conversation.appendChild(row);
+            scrollToBottom();
+            return row;
+        }
+
+        // ── Utilities ─────────────────────────────────────────────────────────
+        function scrollToBottom() {
+            conversation.scrollTop = conversation.scrollHeight;
+        }
+
+        function escapeHtml(str) {
+            return str
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
+
+        function formatResponse(text) {
+            // Escape HTML first, then restore newlines and basic code blocks
+            let safe = escapeHtml(text);
+
+            // Inline code: `code`
+            safe = safe.replace(/`([^`\n]+)`/g, '<code style="background:#eee;padding:1px 5px;border-radius:4px;font-family:monospace;font-size:13px">$1</code>');
+
+            // Fenced code blocks: ```...```
+            safe = safe.replace(/```[\w]*\n?([\s\S]*?)```/g, (_, code) =>
+                `<pre style="background:#1e1e2e;color:#cdd6f4;padding:12px 14px;border-radius:10px;overflow-x:auto;font-size:13px;margin:6px 0;font-family:monospace;white-space:pre">${code.trim()}</pre>`
+            );
+
+            // Bold: **text**
+            safe = safe.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+
+            // Newlines → <br>
+            safe = safe.replace(/\n/g, '<br>');
+
+            return safe;
+        }
+
+        function formatTime(date) {
+            return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         }
     </script>
 </body>
