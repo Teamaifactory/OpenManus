@@ -227,6 +227,83 @@
         .api-status.offline {
             background: #dc3545;
         }
+
+        .file-upload-section {
+            margin-bottom: 25px;
+        }
+
+        .file-upload-area {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .btn-add-file {
+            flex: 1;
+            padding: 12px 20px;
+            background: #f0f0f0;
+            color: #333;
+            border: 2px dashed #667eea;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-add-file:hover {
+            background: #f9f9f9;
+            border-color: #764ba2;
+        }
+
+        .file-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .file-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 12px;
+            background: #f9f9f9;
+            border-radius: 8px;
+            border-left: 3px solid #667eea;
+            font-size: 14px;
+        }
+
+        .file-item-name {
+            flex: 1;
+            color: #333;
+            word-break: break-all;
+        }
+
+        .file-item-size {
+            color: #999;
+            font-size: 12px;
+            margin: 0 10px;
+        }
+
+        .btn-remove-file {
+            background: none;
+            border: none;
+            color: #dc3545;
+            cursor: pointer;
+            font-size: 18px;
+            padding: 0;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .btn-remove-file:hover {
+            color: #c82333;
+            transform: scale(1.2);
+        }
     </style>
 </head>
 <body>
@@ -247,6 +324,23 @@
                     placeholder="Example: A wise old turtle sharing ancient wisdom about life and happiness..."
                     required
                 ></textarea>
+            </div>
+
+            <div class="file-upload-section">
+                <label for="fileInput">Attach Files (Optional)</label>
+                <div class="file-upload-area">
+                    <input 
+                        type="file" 
+                        id="fileInput" 
+                        multiple 
+                        accept="image/*,video/*,.pdf,.doc,.docx,.txt"
+                        style="display: none;"
+                    >
+                    <button type="button" class="btn-add-file" id="addFileBtn">
+                        + Add Files
+                    </button>
+                </div>
+                <div id="fileList" class="file-list"></div>
             </div>
 
             <div class="button-group">
@@ -289,6 +383,43 @@
         const resultValue = document.getElementById('resultValue');
         const apiStatus = document.getElementById('apiStatus');
         const apiStatusText = document.getElementById('apiStatusText');
+        const fileInput = document.getElementById('fileInput');
+        const addFileBtn = document.getElementById('addFileBtn');
+        const fileList = document.getElementById('fileList');
+        let selectedFiles = [];
+
+        addFileBtn.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            const newFiles = Array.from(e.target.files);
+            selectedFiles = [...selectedFiles, ...newFiles];
+            updateFileList();
+            fileInput.value = ''; // Reset input
+        });
+
+        function updateFileList() {
+            fileList.innerHTML = '';
+            selectedFiles.forEach((file, index) => {
+                const fileSize = (file.size / 1024).toFixed(2); // Convert to KB
+                const fileItem = document.createElement('div');
+                fileItem.className = 'file-item';
+                fileItem.innerHTML = `
+                    <span class="file-item-name">📎 ${file.name}</span>
+                    <span class="file-item-size">${fileSize} KB</span>
+                    <button type="button" class="btn-remove-file" data-index="${index}">×</button>
+                `;
+
+                fileItem.querySelector('.btn-remove-file').addEventListener('click', (e) => {
+                    e.preventDefault();
+                    selectedFiles.splice(index, 1);
+                    updateFileList();
+                });
+
+                fileList.appendChild(fileItem);
+            });
+        }
 
         // Check API status on load
         checkApiStatus();
@@ -312,6 +443,8 @@
 
         clearBtn.addEventListener('click', () => {
             promptInput.value = '';
+            selectedFiles = [];
+            updateFileList();
             messageDiv.classList.remove('show');
             statusBox.classList.remove('show');
             resultBox.classList.remove('show');
@@ -344,7 +477,11 @@
 
                 if (response.ok) {
                     const data = await response.json();
-                    showMessage('Video creation request submitted! 🎬', 'success');
+                    let fileInfo = '';
+                    if (selectedFiles.length > 0) {
+                        fileInfo = ` (with ${selectedFiles.length} file${selectedFiles.length > 1 ? 's' : ''})`;
+                    }
+                    showMessage(`Video creation request submitted${fileInfo}! 🎬`, 'success');
                     
                     statusValue.textContent = data.status || 'pending';
                     statusBox.classList.add('show');
@@ -355,6 +492,8 @@
                     }
                     
                     promptInput.value = '';
+                    selectedFiles = [];
+                    updateFileList();
                 } else {
                     showMessage('Failed to create video. Please try again.', 'error');
                 }
