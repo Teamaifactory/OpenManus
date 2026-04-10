@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OpenManus - AI Video Generator</title>
+    <title>OpenManus - AI Agent</title>
     <style>
         * {
             margin: 0;
@@ -25,14 +25,16 @@
             background: white;
             border-radius: 20px;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            max-width: 600px;
+            max-width: 700px;
             width: 100%;
             padding: 40px;
+            display: flex;
+            flex-direction: column;
         }
 
         .header {
             text-align: center;
-            margin-bottom: 40px;
+            margin-bottom: 30px;
         }
 
         .logo {
@@ -51,8 +53,122 @@
             font-size: 16px;
         }
 
+        /* ── Chat history ── */
+        .chat-history {
+            background: #f7f7fb;
+            border: 1px solid #e0e0e0;
+            border-radius: 14px;
+            padding: 16px;
+            min-height: 200px;
+            max-height: 420px;
+            overflow-y: auto;
+            margin-bottom: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            scroll-behavior: smooth;
+        }
+
+        .chat-history:empty::before {
+            content: "Your conversation will appear here\2026";
+            color: #bbb;
+            font-size: 14px;
+            text-align: center;
+            margin: auto;
+        }
+
+        /* Individual chat bubbles */
+        .chat-message {
+            display: flex;
+            flex-direction: column;
+            max-width: 80%;
+        }
+
+        .chat-message.user {
+            align-self: flex-end;
+            align-items: flex-end;
+        }
+
+        .chat-message.ai {
+            align-self: flex-start;
+            align-items: flex-start;
+        }
+
+        .chat-bubble {
+            padding: 12px 16px;
+            border-radius: 16px;
+            font-size: 15px;
+            line-height: 1.5;
+            word-break: break-word;
+            white-space: pre-wrap;
+        }
+
+        .chat-message.user .chat-bubble {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+
+        .chat-message.ai .chat-bubble {
+            background: #ececec;
+            color: #333;
+            border-bottom-left-radius: 4px;
+        }
+
+        .chat-meta {
+            font-size: 11px;
+            color: #aaa;
+            margin-top: 4px;
+            padding: 0 4px;
+        }
+
+        /* File attachments inside a message */
+        .chat-attachments {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 6px;
+        }
+
+        .chat-attachment-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: rgba(102, 126, 234, 0.15);
+            color: #555;
+            border-radius: 20px;
+            padding: 3px 10px;
+            font-size: 12px;
+            border: 1px solid rgba(102, 126, 234, 0.3);
+        }
+
+        /* Typing indicator */
+        .typing-indicator .chat-bubble {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            padding: 14px 18px;
+        }
+
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #999;
+            animation: typingBounce 1.2s infinite ease-in-out;
+        }
+
+        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes typingBounce {
+            0%, 80%, 100% { transform: translateY(0); opacity: 0.5; }
+            40%            { transform: translateY(-6px); opacity: 1; }
+        }
+
+        /* ── Input area ── */
         .form-group {
-            margin-bottom: 25px;
+            margin-bottom: 20px;
         }
 
         label {
@@ -71,7 +187,7 @@
             font-family: inherit;
             font-size: 16px;
             resize: vertical;
-            min-height: 120px;
+            min-height: 100px;
             transition: border-color 0.3s;
         }
 
@@ -115,127 +231,23 @@
         .btn-clear {
             background: #f0f0f0;
             color: #333;
+            flex: 0 0 auto;
+            padding: 15px 24px;
         }
 
         .btn-clear:hover {
             background: #e0e0e0;
         }
 
-        .status-section {
-            margin-top: 30px;
-            padding-top: 30px;
-            border-top: 2px solid #f0f0f0;
-        }
-
-        .status-box {
-            background: #f9f9f9;
-            padding: 20px;
-            border-radius: 10px;
-            margin-bottom: 15px;
-            display: none;
-        }
-
-        .status-box.show {
-            display: block;
-        }
-
-        .status-label {
-            color: #666;
-            font-size: 12px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 5px;
-        }
-
-        .status-value {
-            color: #333;
-            font-size: 16px;
-            font-weight: 600;
-            word-break: break-all;
-        }
-
-        .status-pending {
-            background: #fff3cd;
-            border-left: 4px solid #ffc107;
-        }
-
-        .status-success {
-            background: #d4edda;
-            border-left: 4px solid #28a745;
-        }
-
-        .status-error {
-            background: #f8d7da;
-            border-left: 4px solid #dc3545;
-        }
-
-        .spinner {
-            display: inline-block;
-            width: 16px;
-            height: 16px;
-            border: 3px solid #f3f3f3;
-            border-top: 3px solid #667eea;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin-right: 8px;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        .message {
-            padding: 15px;
-            border-radius: 10px;
-            margin-bottom: 15px;
-            display: none;
-        }
-
-        .message.show {
-            display: block;
-        }
-
-        .message.success {
-            background: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-
-        .message.error {
-            background: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-
-        .footer {
-            text-align: center;
-            margin-top: 30px;
-            color: #999;
-            font-size: 12px;
-        }
-
-        .api-status {
-            display: inline-block;
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            background: #28a745;
-            margin-right: 5px;
-        }
-
-        .api-status.offline {
-            background: #dc3545;
-        }
-
+        /* ── File upload ── */
         .file-upload-section {
-            margin-bottom: 25px;
+            margin-bottom: 20px;
         }
 
         .file-upload-area {
             display: flex;
             gap: 10px;
-            margin-bottom: 15px;
+            margin-bottom: 12px;
         }
 
         .btn-add-file {
@@ -304,24 +316,65 @@
             color: #c82333;
             transform: scale(1.2);
         }
+
+        /* ── Spinner ── */
+        .spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 3px solid rgba(255,255,255,0.4);
+            border-top: 3px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+
+        @keyframes spin {
+            0%   { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* ── Footer ── */
+        .footer {
+            text-align: center;
+            margin-top: 24px;
+            color: #999;
+            font-size: 12px;
+        }
+
+        .api-status {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #28a745;
+            margin-right: 5px;
+        }
+
+        .api-status.offline {
+            background: #dc3545;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <div class="logo">🐢</div>
+            <div class="logo">&#x1F422;</div>
             <h1>OpenManus</h1>
-            <p class="subtitle">AI-Powered Video Generation Pipeline</p>
+            <p class="subtitle">General-Purpose Conversational AI Agent</p>
         </div>
 
-        <div id="message" class="message"></div>
+        <!-- Conversation history -->
+        <div class="chat-history" id="chatHistory"></div>
 
-        <form id="videoForm">
+        <!-- Input form -->
+        <form id="commandForm">
             <div class="form-group">
-                <label for="prompt">Describe Your Video Idea</label>
-                <textarea 
-                    id="prompt" 
-                    placeholder="Example: A wise old turtle sharing ancient wisdom about life and happiness..."
+                <label for="prompt">Enter Command</label>
+                <textarea
+                    id="prompt"
+                    placeholder="Type any command... (e.g., 'create a video about...', 'read my file', 'what can you do?')"
                     required
                 ></textarea>
             </div>
@@ -329,15 +382,15 @@
             <div class="file-upload-section">
                 <label for="fileInput">Attach Files (Optional)</label>
                 <div class="file-upload-area">
-                    <input 
-                        type="file" 
-                        id="fileInput" 
-                        multiple 
-                        accept="image/*,video/*,.pdf,.doc,.docx,.txt"
+                    <input
+                        type="file"
+                        id="fileInput"
+                        multiple
+                        accept="image/*,video/*,.pdf,.doc,.docx,.txt,.csv,.json,.md"
                         style="display: none;"
                     >
                     <button type="button" class="btn-add-file" id="addFileBtn">
-                        + Add Files
+                        &#x1F4CE; Add Files
                     </button>
                 </div>
                 <div id="fileList" class="file-list"></div>
@@ -345,25 +398,13 @@
 
             <div class="button-group">
                 <button type="submit" class="btn-submit" id="submitBtn">
-                    Create Video
+                    Enter
                 </button>
                 <button type="button" class="btn-clear" id="clearBtn">
-                    Clear
+                    New Chat
                 </button>
             </div>
         </form>
-
-        <div class="status-section">
-            <div id="statusBox" class="status-box">
-                <div class="status-label">Status</div>
-                <div class="status-value" id="statusValue"></div>
-            </div>
-
-            <div id="resultBox" class="status-box">
-                <div class="status-label">Result</div>
-                <div class="status-value" id="resultValue"></div>
-            </div>
-        </div>
 
         <div class="footer">
             <span class="api-status" id="apiStatus"></span>
@@ -372,142 +413,210 @@
     </div>
 
     <script>
-        const form = document.getElementById('videoForm');
-        const promptInput = document.getElementById('prompt');
-        const submitBtn = document.getElementById('submitBtn');
-        const clearBtn = document.getElementById('clearBtn');
-        const messageDiv = document.getElementById('message');
-        const statusBox = document.getElementById('statusBox');
-        const statusValue = document.getElementById('statusValue');
-        const resultBox = document.getElementById('resultBox');
-        const resultValue = document.getElementById('resultValue');
-        const apiStatus = document.getElementById('apiStatus');
+        // ── DOM refs ──────────────────────────────────────────────────────────
+        const form          = document.getElementById('commandForm');
+        const promptInput   = document.getElementById('prompt');
+        const submitBtn     = document.getElementById('submitBtn');
+        const clearBtn      = document.getElementById('clearBtn');
+        const chatHistory   = document.getElementById('chatHistory');
+        const apiStatus     = document.getElementById('apiStatus');
         const apiStatusText = document.getElementById('apiStatusText');
-        const fileInput = document.getElementById('fileInput');
-        const addFileBtn = document.getElementById('addFileBtn');
-        const fileList = document.getElementById('fileList');
-        let selectedFiles = [];
+        const fileInput     = document.getElementById('fileInput');
+        const addFileBtn    = document.getElementById('addFileBtn');
+        const fileListEl    = document.getElementById('fileList');
 
-        addFileBtn.addEventListener('click', () => {
-            fileInput.click();
-        });
+        let selectedFiles = [];
+        let conversationHistory = []; // { role: 'user'|'ai', text, files, timestamp }
+
+        // ── File handling ─────────────────────────────────────────────────────
+        addFileBtn.addEventListener('click', () => fileInput.click());
 
         fileInput.addEventListener('change', (e) => {
-            const newFiles = Array.from(e.target.files);
-            selectedFiles = [...selectedFiles, ...newFiles];
-            updateFileList();
-            fileInput.value = ''; // Reset input
+            selectedFiles = [...selectedFiles, ...Array.from(e.target.files)];
+            renderStagedFiles();
+            fileInput.value = '';
         });
 
-        function updateFileList() {
-            fileList.innerHTML = '';
+        function renderStagedFiles() {
+            fileListEl.innerHTML = '';
             selectedFiles.forEach((file, index) => {
-                const fileSize = (file.size / 1024).toFixed(2); // Convert to KB
-                const fileItem = document.createElement('div');
-                fileItem.className = 'file-item';
-                fileItem.innerHTML = `
-                    <span class="file-item-name">📎 ${file.name}</span>
-                    <span class="file-item-size">${fileSize} KB</span>
-                    <button type="button" class="btn-remove-file" data-index="${index}">×</button>
-                `;
-
-                fileItem.querySelector('.btn-remove-file').addEventListener('click', (e) => {
-                    e.preventDefault();
+                const kb = (file.size / 1024).toFixed(1);
+                const item = document.createElement('div');
+                item.className = 'file-item';
+                item.innerHTML =
+                    '<span class="file-item-name">&#x1F4CE; ' + escapeHtml(file.name) + '</span>' +
+                    '<span class="file-item-size">' + kb + ' KB</span>' +
+                    '<button type="button" class="btn-remove-file" data-index="' + index + '" title="Remove">&times;</button>';
+                item.querySelector('.btn-remove-file').addEventListener('click', () => {
                     selectedFiles.splice(index, 1);
-                    updateFileList();
+                    renderStagedFiles();
                 });
-
-                fileList.appendChild(fileItem);
+                fileListEl.appendChild(item);
             });
         }
 
-        // Check API status on load
+        // ── API status ────────────────────────────────────────────────────────
         checkApiStatus();
-        setInterval(checkApiStatus, 30000); // Check every 30 seconds
+        setInterval(checkApiStatus, 30000);
 
         async function checkApiStatus() {
             try {
-                const response = await fetch('/api/status');
-                if (response.ok) {
+                const res = await fetch('/api/status');
+                if (res.ok) {
                     apiStatus.classList.remove('offline');
                     apiStatusText.textContent = 'API Online';
                 } else {
-                    apiStatus.classList.add('offline');
-                    apiStatusText.textContent = 'API Offline';
+                    throw new Error('not ok');
                 }
-            } catch (error) {
+            } catch (e) {
                 apiStatus.classList.add('offline');
                 apiStatusText.textContent = 'API Offline';
             }
         }
 
+        // ── New Chat ──────────────────────────────────────────────────────────
         clearBtn.addEventListener('click', () => {
+            conversationHistory = [];
+            chatHistory.innerHTML = '';
             promptInput.value = '';
             selectedFiles = [];
-            updateFileList();
-            messageDiv.classList.remove('show');
-            statusBox.classList.remove('show');
-            resultBox.classList.remove('show');
+            renderStagedFiles();
             promptInput.focus();
         });
 
+        // ── Submit ────────────────────────────────────────────────────────────
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
-            
-            const prompt = promptInput.value.trim();
-            if (!prompt) {
-                showMessage('Please enter a video idea', 'error');
-                return;
-            }
 
+            const prompt = promptInput.value.trim();
+            if (!prompt) return;
+
+            // Snapshot files attached to this message
+            const attachedFiles = [...selectedFiles];
+
+            // Add user message to history and UI
+            const userEntry = { role: 'user', text: prompt, files: attachedFiles, timestamp: new Date() };
+            conversationHistory.push(userEntry);
+            appendMessage(userEntry);
+
+            // Clear input and staged files
+            promptInput.value = '';
+            selectedFiles = [];
+            renderStagedFiles();
+
+            // Show typing indicator
+            const typingEl = appendTypingIndicator();
+
+            // Disable submit while waiting
             submitBtn.disabled = true;
-            submitBtn.innerHTML = '<span class="spinner"></span>Creating...';
-            messageDiv.classList.remove('show');
-            statusBox.classList.remove('show');
-            resultBox.classList.remove('show');
+            submitBtn.innerHTML = '<span class="spinner"></span>Thinking...';
 
             try {
-                const response = await fetch('/api/create-video', {
+                const res = await fetch('/api/command', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                    },
-                    body: `prompt=${encodeURIComponent(prompt)}`
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: 'prompt=' + encodeURIComponent(prompt)
                 });
 
-                if (response.ok) {
-                    const data = await response.json();
-                    let fileInfo = '';
-                    if (selectedFiles.length > 0) {
-                        fileInfo = ` (with ${selectedFiles.length} file${selectedFiles.length > 1 ? 's' : ''})`;
-                    }
-                    showMessage(`Video creation request submitted${fileInfo}! 🎬`, 'success');
-                    
-                    statusValue.textContent = data.status || 'pending';
-                    statusBox.classList.add('show');
-                    
-                    if (data.message) {
-                        resultValue.textContent = data.message;
-                        resultBox.classList.add('show');
-                    }
-                    
-                    promptInput.value = '';
-                    selectedFiles = [];
-                    updateFileList();
+                typingEl.remove();
+
+                if (res.ok) {
+                    const data = await res.json();
+                    const aiText = data.message || 'Command received.';
+                    const aiEntry = { role: 'ai', text: aiText, files: [], timestamp: new Date() };
+                    conversationHistory.push(aiEntry);
+                    appendMessage(aiEntry);
                 } else {
-                    showMessage('Failed to create video. Please try again.', 'error');
+                    const errEntry = {
+                        role: 'ai',
+                        text: '\u26A0\uFE0F Server returned ' + res.status + '. Please try again.',
+                        files: [],
+                        timestamp: new Date()
+                    };
+                    conversationHistory.push(errEntry);
+                    appendMessage(errEntry);
                 }
-            } catch (error) {
-                showMessage('Error: ' + error.message, 'error');
+            } catch (err) {
+                typingEl.remove();
+                const errEntry = {
+                    role: 'ai',
+                    text: '\u26A0\uFE0F Network error: ' + err.message,
+                    files: [],
+                    timestamp: new Date()
+                };
+                conversationHistory.push(errEntry);
+                appendMessage(errEntry);
             } finally {
                 submitBtn.disabled = false;
-                submitBtn.innerHTML = 'Create Video';
+                submitBtn.innerHTML = 'Enter';
+                promptInput.focus();
             }
         });
 
-        function showMessage(text, type) {
-            messageDiv.textContent = text;
-            messageDiv.className = `message show ${type}`;
+        // ── Chat rendering helpers ────────────────────────────────────────────
+        function appendMessage(entry) {
+            var role = entry.role;
+            var text = entry.text;
+            var files = entry.files;
+            var timestamp = entry.timestamp;
+
+            var wrapper = document.createElement('div');
+            wrapper.className = 'chat-message ' + role;
+
+            // Bubble
+            var bubble = document.createElement('div');
+            bubble.className = 'chat-bubble';
+            bubble.textContent = text;
+            wrapper.appendChild(bubble);
+
+            // File attachments (user messages only)
+            if (files && files.length > 0) {
+                var attachRow = document.createElement('div');
+                attachRow.className = 'chat-attachments';
+                files.forEach(function(f) {
+                    var tag = document.createElement('span');
+                    tag.className = 'chat-attachment-tag';
+                    tag.textContent = '\uD83D\uDCCE ' + f.name;
+                    attachRow.appendChild(tag);
+                });
+                wrapper.appendChild(attachRow);
+            }
+
+            // Timestamp
+            var meta = document.createElement('div');
+            meta.className = 'chat-meta';
+            meta.textContent = formatTime(timestamp);
+            wrapper.appendChild(meta);
+
+            chatHistory.appendChild(wrapper);
+            chatHistory.scrollTop = chatHistory.scrollHeight;
+        }
+
+        function appendTypingIndicator() {
+            var wrapper = document.createElement('div');
+            wrapper.className = 'chat-message ai typing-indicator';
+            var bubble = document.createElement('div');
+            bubble.className = 'chat-bubble';
+            bubble.innerHTML =
+                '<span class="typing-dot"></span>' +
+                '<span class="typing-dot"></span>' +
+                '<span class="typing-dot"></span>';
+            wrapper.appendChild(bubble);
+            chatHistory.appendChild(wrapper);
+            chatHistory.scrollTop = chatHistory.scrollHeight;
+            return wrapper;
+        }
+
+        function formatTime(date) {
+            return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        }
+
+        function escapeHtml(str) {
+            return str
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
         }
     </script>
 </body>

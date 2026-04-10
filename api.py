@@ -53,12 +53,24 @@ async def status():
 
 @app.post("/api/create-video")
 async def create_video(prompt: str):
-    """Placeholder for video creation endpoint"""
+    """Legacy video creation endpoint - now delegates to /api/command"""
     return JSONResponse(
         status_code=200,
         content={
-            "status": "pending",
-            "message": "Video creation endpoint - coming soon",
+            "status": "received",
+            "message": f"Command received: {prompt}",
+            "prompt": prompt
+        }
+    )
+
+@app.post("/api/command")
+async def command(prompt: str):
+    """General-purpose command endpoint for the conversational AI interface"""
+    return JSONResponse(
+        status_code=200,
+        content={
+            "status": "received",
+            "message": f"Command received: {prompt}",
             "prompt": prompt
         }
     )
