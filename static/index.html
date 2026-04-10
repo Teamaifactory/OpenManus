@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OpenManus - AI Video Generator</title>
+    <title>OpenManus</title>
     <style>
         * {
             margin: 0;
@@ -13,502 +13,765 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
-
-        .container {
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            max-width: 600px;
-            width: 100%;
-            padding: 40px;
-        }
-
-        .header {
-            text-align: center;
-            margin-bottom: 40px;
-        }
-
-        .logo {
-            font-size: 48px;
-            margin-bottom: 10px;
-        }
-
-        h1 {
-            color: #333;
-            font-size: 32px;
-            margin-bottom: 10px;
-        }
-
-        .subtitle {
-            color: #666;
-            font-size: 16px;
-        }
-
-        .form-group {
-            margin-bottom: 25px;
-        }
-
-        label {
-            display: block;
-            color: #333;
-            font-weight: 600;
-            margin-bottom: 10px;
-            font-size: 14px;
-        }
-
-        textarea {
-            width: 100%;
-            padding: 15px;
-            border: 2px solid #e0e0e0;
-            border-radius: 10px;
-            font-family: inherit;
-            font-size: 16px;
-            resize: vertical;
-            min-height: 120px;
-            transition: border-color 0.3s;
-        }
-
-        textarea:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-
-        .button-group {
-            display: flex;
-            gap: 10px;
-        }
-
-        button {
-            flex: 1;
-            padding: 15px 30px;
-            border: none;
-            border-radius: 10px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-
-        .btn-submit {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-        }
-
-        .btn-submit:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
-        }
-
-        .btn-submit:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        .btn-clear {
-            background: #f0f0f0;
-            color: #333;
-        }
-
-        .btn-clear:hover {
-            background: #e0e0e0;
-        }
-
-        .status-section {
-            margin-top: 30px;
-            padding-top: 30px;
-            border-top: 2px solid #f0f0f0;
-        }
-
-        .status-box {
-            background: #f9f9f9;
-            padding: 20px;
-            border-radius: 10px;
-            margin-bottom: 15px;
-            display: none;
-        }
-
-        .status-box.show {
-            display: block;
-        }
-
-        .status-label {
-            color: #666;
-            font-size: 12px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 5px;
-        }
-
-        .status-value {
-            color: #333;
-            font-size: 16px;
-            font-weight: 600;
-            word-break: break-all;
-        }
-
-        .status-pending {
-            background: #fff3cd;
-            border-left: 4px solid #ffc107;
-        }
-
-        .status-success {
-            background: #d4edda;
-            border-left: 4px solid #28a745;
-        }
-
-        .status-error {
-            background: #f8d7da;
-            border-left: 4px solid #dc3545;
-        }
-
-        .spinner {
-            display: inline-block;
-            width: 16px;
-            height: 16px;
-            border: 3px solid #f3f3f3;
-            border-top: 3px solid #667eea;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin-right: 8px;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        .message {
-            padding: 15px;
-            border-radius: 10px;
-            margin-bottom: 15px;
-            display: none;
-        }
-
-        .message.show {
-            display: block;
-        }
-
-        .message.success {
-            background: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-
-        .message.error {
-            background: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-
-        .footer {
-            text-align: center;
-            margin-top: 30px;
-            color: #999;
-            font-size: 12px;
-        }
-
-        .api-status {
-            display: inline-block;
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            background: #28a745;
-            margin-right: 5px;
-        }
-
-        .api-status.offline {
-            background: #dc3545;
-        }
-
-        .file-upload-section {
-            margin-bottom: 25px;
-        }
-
-        .file-upload-area {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 15px;
-        }
-
-        .btn-add-file {
-            flex: 1;
-            padding: 12px 20px;
-            background: #f0f0f0;
-            color: #333;
-            border: 2px dashed #667eea;
-            border-radius: 10px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-
-        .btn-add-file:hover {
-            background: #f9f9f9;
-            border-color: #764ba2;
-        }
-
-        .file-list {
+            background: #0f0f0f;
+            color: #e8e8e8;
+            height: 100vh;
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            overflow: hidden;
         }
 
-        .file-item {
+        /* ── Header ── */
+        .header {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 10px 12px;
-            background: #f9f9f9;
-            border-radius: 8px;
-            border-left: 3px solid #667eea;
-            font-size: 14px;
+            padding: 14px 24px;
+            background: #1a1a1a;
+            border-bottom: 1px solid #2a2a2a;
+            flex-shrink: 0;
         }
 
-        .file-item-name {
-            flex: 1;
-            color: #333;
-            word-break: break-all;
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
 
-        .file-item-size {
-            color: #999;
+        .header-logo {
+            font-size: 26px;
+            line-height: 1;
+        }
+
+        .header-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #ffffff;
+            letter-spacing: -0.3px;
+        }
+
+        .header-subtitle {
             font-size: 12px;
-            margin: 0 10px;
+            color: #666;
+            margin-top: 1px;
         }
 
-        .btn-remove-file {
+        .btn-clear-history {
+            padding: 7px 14px;
+            background: transparent;
+            color: #888;
+            border: 1px solid #333;
+            border-radius: 8px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-clear-history:hover {
+            background: #2a2a2a;
+            color: #ccc;
+            border-color: #444;
+        }
+
+        /* ── Chat area ── */
+        .chat-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px 0;
+            scroll-behavior: smooth;
+        }
+
+        .chat-container::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .chat-container::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .chat-container::-webkit-scrollbar-thumb {
+            background: #333;
+            border-radius: 3px;
+        }
+
+        .messages-wrapper {
+            max-width: 760px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        /* Empty state */
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            min-height: 300px;
+            color: #444;
+            text-align: center;
+            gap: 12px;
+        }
+
+        .empty-state-icon {
+            font-size: 52px;
+            opacity: 0.6;
+        }
+
+        .empty-state-title {
+            font-size: 22px;
+            font-weight: 600;
+            color: #555;
+        }
+
+        .empty-state-subtitle {
+            font-size: 14px;
+            color: #444;
+            max-width: 340px;
+            line-height: 1.6;
+        }
+
+        /* ── Message bubbles ── */
+        .message-row {
+            display: flex;
+            gap: 12px;
+            animation: fadeSlideIn 0.25s ease-out;
+        }
+
+        @keyframes fadeSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* User messages — right-aligned */
+        .message-row.user {
+            flex-direction: row-reverse;
+        }
+
+        .message-avatar {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        .message-avatar.user-avatar {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+        }
+
+        .message-avatar.agent-avatar {
+            background: #2a2a2a;
+            border: 1px solid #333;
+        }
+
+        .message-content {
+            max-width: 72%;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .message-row.user .message-content {
+            align-items: flex-end;
+        }
+
+        .message-row.agent .message-content {
+            align-items: flex-start;
+        }
+
+        .message-sender {
+            font-size: 11px;
+            color: #555;
+            font-weight: 500;
+            letter-spacing: 0.3px;
+            text-transform: uppercase;
+            padding: 0 4px;
+        }
+
+        .message-bubble {
+            padding: 12px 16px;
+            border-radius: 18px;
+            font-size: 15px;
+            line-height: 1.55;
+            word-break: break-word;
+            white-space: pre-wrap;
+        }
+
+        /* User bubble — blue, right */
+        .message-row.user .message-bubble {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: #ffffff;
+            border-bottom-right-radius: 4px;
+        }
+
+        /* Agent bubble — dark gray, left */
+        .message-row.agent .message-bubble {
+            background: #1e1e1e;
+            color: #e0e0e0;
+            border: 1px solid #2a2a2a;
+            border-bottom-left-radius: 4px;
+        }
+
+        /* Attached files shown inside user bubble */
+        .message-files {
+            margin-top: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .message-file-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 12px;
+            background: rgba(255,255,255,0.15);
+            padding: 3px 8px;
+            border-radius: 20px;
+            color: rgba(255,255,255,0.9);
+        }
+
+        /* Typing indicator */
+        .typing-indicator .message-bubble {
+            padding: 14px 18px;
+        }
+
+        .typing-dots {
+            display: flex;
+            gap: 5px;
+            align-items: center;
+        }
+
+        .typing-dots span {
+            width: 7px;
+            height: 7px;
+            background: #555;
+            border-radius: 50%;
+            animation: typingBounce 1.2s infinite ease-in-out;
+        }
+
+        .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes typingBounce {
+            0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+            30% { transform: translateY(-5px); opacity: 1; }
+        }
+
+        /* ── Input area ── */
+        .input-area {
+            flex-shrink: 0;
+            background: #1a1a1a;
+            border-top: 1px solid #2a2a2a;
+            padding: 16px 20px 20px;
+        }
+
+        .input-wrapper {
+            max-width: 760px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        /* File list above input */
+        .attached-files {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .attached-file-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: #252525;
+            border: 1px solid #333;
+            border-radius: 20px;
+            padding: 4px 10px 4px 8px;
+            font-size: 12px;
+            color: #ccc;
+            max-width: 220px;
+        }
+
+        .attached-file-chip span {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .chip-remove {
             background: none;
             border: none;
-            color: #dc3545;
+            color: #666;
             cursor: pointer;
-            font-size: 18px;
+            font-size: 15px;
+            line-height: 1;
             padding: 0;
-            width: 24px;
-            height: 24px;
+            flex-shrink: 0;
+            transition: color 0.15s;
+        }
+
+        .chip-remove:hover {
+            color: #e05555;
+        }
+
+        /* Input row */
+        .input-row {
+            display: flex;
+            align-items: flex-end;
+            gap: 8px;
+            background: #252525;
+            border: 1px solid #333;
+            border-radius: 14px;
+            padding: 8px 8px 8px 14px;
+            transition: border-color 0.2s;
+        }
+
+        .input-row:focus-within {
+            border-color: #667eea;
+        }
+
+        #messageInput {
+            flex: 1;
+            background: transparent;
+            border: none;
+            outline: none;
+            color: #e8e8e8;
+            font-family: inherit;
+            font-size: 15px;
+            line-height: 1.5;
+            resize: none;
+            max-height: 160px;
+            min-height: 24px;
+            overflow-y: auto;
+        }
+
+        #messageInput::placeholder {
+            color: #555;
+        }
+
+        #messageInput::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        #messageInput::-webkit-scrollbar-thumb {
+            background: #333;
+            border-radius: 2px;
+        }
+
+        .input-actions {
+            display: flex;
+            align-items: flex-end;
+            gap: 6px;
+            flex-shrink: 0;
+        }
+
+        .btn-attach {
+            width: 36px;
+            height: 36px;
+            background: transparent;
+            border: 1px solid #3a3a3a;
+            border-radius: 9px;
+            color: #888;
+            font-size: 18px;
+            cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
             transition: all 0.2s;
+            flex-shrink: 0;
         }
 
-        .btn-remove-file:hover {
-            color: #c82333;
-            transform: scale(1.2);
+        .btn-attach:hover {
+            background: #2e2e2e;
+            color: #ccc;
+            border-color: #555;
+        }
+
+        .btn-send {
+            height: 36px;
+            padding: 0 16px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 9px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            flex-shrink: 0;
+            white-space: nowrap;
+        }
+
+        .btn-send:hover:not(:disabled) {
+            opacity: 0.88;
+            transform: translateY(-1px);
+        }
+
+        .btn-send:disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* ── Footer ── */
+        .footer {
+            text-align: center;
+            padding: 6px 20px 10px;
+            background: #1a1a1a;
+            font-size: 11px;
+            color: #444;
+            flex-shrink: 0;
+        }
+
+        .api-dot {
+            display: inline-block;
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: #28a745;
+            margin-right: 5px;
+            vertical-align: middle;
+        }
+
+        .api-dot.offline {
+            background: #dc3545;
+        }
+
+        /* ── Responsive ── */
+        @media (max-width: 600px) {
+            .messages-wrapper {
+                padding: 0 12px;
+            }
+
+            .message-content {
+                max-width: 85%;
+            }
+
+            .header {
+                padding: 12px 16px;
+            }
+
+            .input-area {
+                padding: 12px 12px 16px;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <div class="logo">🐢</div>
-            <h1>OpenManus</h1>
-            <p class="subtitle">AI-Powered Video Generation Pipeline</p>
-        </div>
 
-        <div id="message" class="message"></div>
-
-        <form id="videoForm">
-            <div class="form-group">
-                <label for="prompt">Describe Your Video Idea</label>
-                <textarea 
-                    id="prompt" 
-                    placeholder="Example: A wise old turtle sharing ancient wisdom about life and happiness..."
-                    required
-                ></textarea>
-            </div>
-
-            <div class="file-upload-section">
-                <label for="fileInput">Attach Files (Optional)</label>
-                <div class="file-upload-area">
-                    <input 
-                        type="file" 
-                        id="fileInput" 
-                        multiple 
-                        accept="image/*,video/*,.pdf,.doc,.docx,.txt"
-                        style="display: none;"
-                    >
-                    <button type="button" class="btn-add-file" id="addFileBtn">
-                        + Add Files
-                    </button>
-                </div>
-                <div id="fileList" class="file-list"></div>
-            </div>
-
-            <div class="button-group">
-                <button type="submit" class="btn-submit" id="submitBtn">
-                    Create Video
-                </button>
-                <button type="button" class="btn-clear" id="clearBtn">
-                    Clear
-                </button>
-            </div>
-        </form>
-
-        <div class="status-section">
-            <div id="statusBox" class="status-box">
-                <div class="status-label">Status</div>
-                <div class="status-value" id="statusValue"></div>
-            </div>
-
-            <div id="resultBox" class="status-box">
-                <div class="status-label">Result</div>
-                <div class="status-value" id="resultValue"></div>
+    <!-- Header -->
+    <div class="header">
+        <div class="header-left">
+            <div class="header-logo">🐢</div>
+            <div>
+                <div class="header-title">OpenManus</div>
+                <div class="header-subtitle">Conversational AI Agent</div>
             </div>
         </div>
+        <button class="btn-clear-history" id="clearHistoryBtn">Clear history</button>
+    </div>
 
-        <div class="footer">
-            <span class="api-status" id="apiStatus"></span>
-            <span id="apiStatusText">Checking API...</span>
+    <!-- Chat messages -->
+    <div class="chat-container" id="chatContainer">
+        <div class="messages-wrapper" id="messagesWrapper">
+            <div class="empty-state" id="emptyState">
+                <div class="empty-state-icon">🐢</div>
+                <div class="empty-state-title">How can I help you?</div>
+                <div class="empty-state-subtitle">Ask me anything — create videos, analyze files, answer questions, or orchestrate any task.</div>
+            </div>
         </div>
     </div>
 
-    <script>
-        const form = document.getElementById('videoForm');
-        const promptInput = document.getElementById('prompt');
-        const submitBtn = document.getElementById('submitBtn');
-        const clearBtn = document.getElementById('clearBtn');
-        const messageDiv = document.getElementById('message');
-        const statusBox = document.getElementById('statusBox');
-        const statusValue = document.getElementById('statusValue');
-        const resultBox = document.getElementById('resultBox');
-        const resultValue = document.getElementById('resultValue');
-        const apiStatus = document.getElementById('apiStatus');
-        const apiStatusText = document.getElementById('apiStatusText');
-        const fileInput = document.getElementById('fileInput');
-        const addFileBtn = document.getElementById('addFileBtn');
-        const fileList = document.getElementById('fileList');
-        let selectedFiles = [];
+    <!-- Input area -->
+    <div class="input-area">
+        <div class="input-wrapper">
 
-        addFileBtn.addEventListener('click', () => {
-            fileInput.click();
+            <!-- Attached file chips -->
+            <div class="attached-files" id="attachedFiles"></div>
+
+            <!-- Text input row -->
+            <div class="input-row">
+                <textarea
+                    id="messageInput"
+                    placeholder="Message OpenManus…"
+                    rows="1"
+                ></textarea>
+                <div class="input-actions">
+                    <input
+                        type="file"
+                        id="fileInput"
+                        multiple
+                        accept="image/*,video/*,.pdf,.doc,.docx,.txt,.csv,.json,.md"
+                        style="display:none;"
+                    >
+                    <button class="btn-attach" id="attachBtn" title="Attach files">＋</button>
+                    <button class="btn-send" id="sendBtn">Enter</button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+        <span class="api-dot" id="apiDot"></span>
+        <span id="apiStatusText">Checking API…</span>
+    </div>
+
+    <script>
+        // ── DOM refs ──────────────────────────────────────────────────────────
+        const chatContainer   = document.getElementById('chatContainer');
+        const messagesWrapper = document.getElementById('messagesWrapper');
+        const emptyState      = document.getElementById('emptyState');
+        const messageInput    = document.getElementById('messageInput');
+        const sendBtn         = document.getElementById('sendBtn');
+        const attachBtn       = document.getElementById('attachBtn');
+        const fileInput       = document.getElementById('fileInput');
+        const attachedFiles   = document.getElementById('attachedFiles');
+        const clearHistoryBtn = document.getElementById('clearHistoryBtn');
+        const apiDot          = document.getElementById('apiDot');
+        const apiStatusText   = document.getElementById('apiStatusText');
+
+        // ── State ─────────────────────────────────────────────────────────────
+        let pendingFiles = [];   // files staged for the next message
+        let isWaiting    = false; // true while waiting for agent response
+
+        // ── Auto-resize textarea ──────────────────────────────────────────────
+        messageInput.addEventListener('input', () => {
+            messageInput.style.height = 'auto';
+            messageInput.style.height = Math.min(messageInput.scrollHeight, 160) + 'px';
         });
+
+        // ── Send on Enter (Shift+Enter = newline) ─────────────────────────────
+        messageInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+
+        sendBtn.addEventListener('click', sendMessage);
+
+        // ── File attachment ───────────────────────────────────────────────────
+        attachBtn.addEventListener('click', () => fileInput.click());
 
         fileInput.addEventListener('change', (e) => {
             const newFiles = Array.from(e.target.files);
-            selectedFiles = [...selectedFiles, ...newFiles];
-            updateFileList();
-            fileInput.value = ''; // Reset input
+            pendingFiles = [...pendingFiles, ...newFiles];
+            renderFileChips();
+            fileInput.value = '';
         });
 
-        function updateFileList() {
-            fileList.innerHTML = '';
-            selectedFiles.forEach((file, index) => {
-                const fileSize = (file.size / 1024).toFixed(2); // Convert to KB
-                const fileItem = document.createElement('div');
-                fileItem.className = 'file-item';
-                fileItem.innerHTML = `
-                    <span class="file-item-name">📎 ${file.name}</span>
-                    <span class="file-item-size">${fileSize} KB</span>
-                    <button type="button" class="btn-remove-file" data-index="${index}">×</button>
+        function renderFileChips() {
+            attachedFiles.innerHTML = '';
+            pendingFiles.forEach((file, idx) => {
+                const chip = document.createElement('div');
+                chip.className = 'attached-file-chip';
+                chip.innerHTML = `
+                    <span title="${escapeHtml(file.name)}">📎 ${escapeHtml(file.name)}</span>
+                    <button class="chip-remove" data-idx="${idx}" title="Remove">×</button>
                 `;
-
-                fileItem.querySelector('.btn-remove-file').addEventListener('click', (e) => {
-                    e.preventDefault();
-                    selectedFiles.splice(index, 1);
-                    updateFileList();
+                chip.querySelector('.chip-remove').addEventListener('click', () => {
+                    pendingFiles.splice(idx, 1);
+                    renderFileChips();
                 });
-
-                fileList.appendChild(fileItem);
+                attachedFiles.appendChild(chip);
             });
         }
 
-        // Check API status on load
-        checkApiStatus();
-        setInterval(checkApiStatus, 30000); // Check every 30 seconds
-
-        async function checkApiStatus() {
-            try {
-                const response = await fetch('/api/status');
-                if (response.ok) {
-                    apiStatus.classList.remove('offline');
-                    apiStatusText.textContent = 'API Online';
-                } else {
-                    apiStatus.classList.add('offline');
-                    apiStatusText.textContent = 'API Offline';
-                }
-            } catch (error) {
-                apiStatus.classList.add('offline');
-                apiStatusText.textContent = 'API Offline';
-            }
-        }
-
-        clearBtn.addEventListener('click', () => {
-            promptInput.value = '';
-            selectedFiles = [];
-            updateFileList();
-            messageDiv.classList.remove('show');
-            statusBox.classList.remove('show');
-            resultBox.classList.remove('show');
-            promptInput.focus();
+        // ── Clear history ─────────────────────────────────────────────────────
+        clearHistoryBtn.addEventListener('click', () => {
+            // Remove all message rows, keep empty state
+            const rows = messagesWrapper.querySelectorAll('.message-row');
+            rows.forEach(r => r.remove());
+            emptyState.style.display = '';
+            pendingFiles = [];
+            renderFileChips();
+            messageInput.value = '';
+            messageInput.style.height = 'auto';
         });
 
-        form.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const prompt = promptInput.value.trim();
-            if (!prompt) {
-                showMessage('Please enter a video idea', 'error');
-                return;
-            }
+        // ── Send message ──────────────────────────────────────────────────────
+        async function sendMessage() {
+            if (isWaiting) return;
 
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = '<span class="spinner"></span>Creating...';
-            messageDiv.classList.remove('show');
-            statusBox.classList.remove('show');
-            resultBox.classList.remove('show');
+            const text = messageInput.value.trim();
+            if (!text && pendingFiles.length === 0) return;
+
+            // Snapshot files for this message
+            const filesForMessage = [...pendingFiles];
+            pendingFiles = [];
+            renderFileChips();
+
+            // Clear input
+            messageInput.value = '';
+            messageInput.style.height = 'auto';
+
+            // Hide empty state
+            emptyState.style.display = 'none';
+
+            // Render user message
+            appendMessage('user', text, filesForMessage);
+
+            // Show typing indicator
+            const typingId = showTyping();
+
+            // Disable input while waiting
+            isWaiting = true;
+            sendBtn.disabled = true;
+            messageInput.disabled = true;
 
             try {
                 const response = await fetch('/api/create-video', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                    },
-                    body: `prompt=${encodeURIComponent(prompt)}`
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: `prompt=${encodeURIComponent(text)}`
                 });
+
+                removeTyping(typingId);
 
                 if (response.ok) {
                     const data = await response.json();
-                    let fileInfo = '';
-                    if (selectedFiles.length > 0) {
-                        fileInfo = ` (with ${selectedFiles.length} file${selectedFiles.length > 1 ? 's' : ''})`;
-                    }
-                    showMessage(`Video creation request submitted${fileInfo}! 🎬`, 'success');
-                    
-                    statusValue.textContent = data.status || 'pending';
-                    statusBox.classList.add('show');
-                    
-                    if (data.message) {
-                        resultValue.textContent = data.message;
-                        resultBox.classList.add('show');
-                    }
-                    
-                    promptInput.value = '';
-                    selectedFiles = [];
-                    updateFileList();
+                    const replyText = buildReplyText(data, filesForMessage);
+                    appendMessage('agent', replyText);
                 } else {
-                    showMessage('Failed to create video. Please try again.', 'error');
+                    appendMessage('agent', `⚠️ Server returned an error (${response.status}). Please try again.`);
                 }
-            } catch (error) {
-                showMessage('Error: ' + error.message, 'error');
+            } catch (err) {
+                removeTyping(typingId);
+                appendMessage('agent', `⚠️ Could not reach OpenManus: ${err.message}`);
             } finally {
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = 'Create Video';
+                isWaiting = false;
+                sendBtn.disabled = false;
+                messageInput.disabled = false;
+                messageInput.focus();
             }
-        });
-
-        function showMessage(text, type) {
-            messageDiv.textContent = text;
-            messageDiv.className = `message show ${type}`;
         }
+
+        function buildReplyText(data, files) {
+            let parts = [];
+            if (data.message) parts.push(data.message);
+            if (data.status)  parts.push(`Status: ${data.status}`);
+            if (data.prompt)  parts.push(`Received prompt: "${data.prompt}"`);
+            if (files.length > 0) {
+                parts.push(`📎 ${files.length} file${files.length > 1 ? 's' : ''} received: ${files.map(f => f.name).join(', ')}`);
+            }
+            return parts.join('\n') || 'Done.';
+        }
+
+        // ── Render a chat message ─────────────────────────────────────────────
+        function appendMessage(role, text, files = []) {
+            const row = document.createElement('div');
+            row.className = `message-row ${role}`;
+
+            const avatarEmoji = role === 'user' ? '🧑' : '🐢';
+            const senderLabel = role === 'user' ? 'You' : 'OpenManus';
+
+            let filesHtml = '';
+            if (files.length > 0) {
+                const tags = files.map(f =>
+                    `<span class="message-file-tag">📎 ${escapeHtml(f.name)}</span>`
+                ).join('');
+                filesHtml = `<div class="message-files">${tags}</div>`;
+            }
+
+            row.innerHTML = `
+                <div class="message-avatar ${role}-avatar">${avatarEmoji}</div>
+                <div class="message-content">
+                    <div class="message-sender">${senderLabel}</div>
+                    <div class="message-bubble">
+                        ${text ? escapeHtml(text) : ''}
+                        ${filesHtml}
+                    </div>
+                </div>
+            `;
+
+            messagesWrapper.appendChild(row);
+            scrollToBottom();
+            return row;
+        }
+
+        // ── Typing indicator ──────────────────────────────────────────────────
+        let typingCounter = 0;
+
+        function showTyping() {
+            const id = ++typingCounter;
+            const row = document.createElement('div');
+            row.className = 'message-row agent typing-indicator';
+            row.dataset.typingId = id;
+            row.innerHTML = `
+                <div class="message-avatar agent-avatar">🐢</div>
+                <div class="message-content">
+                    <div class="message-sender">OpenManus</div>
+                    <div class="message-bubble">
+                        <div class="typing-dots">
+                            <span></span><span></span><span></span>
+                        </div>
+                    </div>
+                </div>
+            `;
+            messagesWrapper.appendChild(row);
+            scrollToBottom();
+            return id;
+        }
+
+        function removeTyping(id) {
+            const el = messagesWrapper.querySelector(`[data-typing-id="${id}"]`);
+            if (el) el.remove();
+        }
+
+        // ── Scroll helpers ────────────────────────────────────────────────────
+        function scrollToBottom() {
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        // ── Utility ───────────────────────────────────────────────────────────
+        function escapeHtml(str) {
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        // ── API status polling ────────────────────────────────────────────────
+        async function checkApiStatus() {
+            try {
+                const res = await fetch('/api/status');
+                if (res.ok) {
+                    apiDot.classList.remove('offline');
+                    apiStatusText.textContent = 'API Online';
+                } else {
+                    throw new Error('non-ok');
+                }
+            } catch {
+                apiDot.classList.add('offline');
+                apiStatusText.textContent = 'API Offline';
+            }
+        }
+
+        checkApiStatus();
+        setInterval(checkApiStatus, 30000);
+
+        // Focus input on load
+        messageInput.focus();
     </script>
 </body>
 </html>
