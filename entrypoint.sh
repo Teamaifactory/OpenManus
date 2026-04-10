@@ -53,4 +53,10 @@ EOF
 
 echo "✓ Config written to ${CONFIG_FILE}"
 
+# Ensure the Playwright Chromium browser is available for the WebBrowser tool.
+# This is a no-op if the browser was already installed during the Docker build.
+echo "→ Installing Playwright Chromium browser..."
+playwright install chromium
+echo "✓ Playwright Chromium ready"
+
 exec python -m uvicorn api:app --host 0.0.0.0 --port "${PORT:-8000}"
