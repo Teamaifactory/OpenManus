@@ -6,6 +6,10 @@ import os
 import logging
 import base64
 import mimetypes
+import tomllib
+from pathlib import Path
+
+from openai import AsyncOpenAI
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -17,22 +21,103 @@ static_dir = os.path.join(os.path.dirname(__file__), "static")
 if os.path.exists(static_dir):
     app.mount("/static", StaticFiles(directory=static_dir), name="static")
 
-# Global agent state (will be initialized lazily)
-_agent = None
+
+# ---------------------------------------------------------------------------
+# SimpleLLMAgent — lightweight LLM caller that reads config/config.toml
+# directly, avoiding all optional heavy dependencies (boto3, browser-use, …).
+# ---------------------------------------------------------------------------
+
+class SimpleLLMAgent:
+    """
+    Minimal agent that calls an LLM via the OpenAI-compatible SDK.
+
+    It reads the [llm] (and optional [llm.<name>]) sections from
+    config/config.toml so it honours whatever model/key entrypoint.sh wrote.
+    """
+
+    _DEFAULT_SYSTEM_PROMPT = (
+        "You are OpenManus, a helpful AI assistant. "
+        "Answer the user's questions clearly and concisely."
+    )
+
+    def __init__(self, config_name: str = "default"):
+        cfg = self._load_llm_config(config_name)
+        self.model: str = cfg["model"]
+        self.base_url: str = cfg["base_url"]
+        self.api_key: str = cfg["api_key"]
+        self.max_tokens: int = int(cfg.get("max_tokens", 4096))
+        self.temperature: float = float(cfg.get("temperature", 0.7))
+        self.client = AsyncOpenAI(api_key=self.api_key, base_url=self.base_url)
+
+    @staticmethod
+    def _load_llm_config(config_name: str) -> dict:
+        """
+        Load LLM settings from config/config.toml.
+
+        The TOML structure produced by entrypoint.sh is:
+            [llm]           → base / default settings
+            [llm.vision]    → vision override
+            [llm.filter]    → Claude filter override
+            [llm.engagement]→ engagement override
+
+        For config_name == "default" we use the top-level [llm] table.
+        For any other name we merge [llm] with [llm.<name>].
+        """
+        project_root = Path(__file__).resolve().parent
+        config_path = project_root / "config" / "config.toml"
+        if not config_path.exists():
+            # Fall back to the example file so the service can at least start
+            config_path = project_root / "config" / "config.example.toml"
+        if not config_path.exists():
+            raise FileNotFoundError(
+                "No config/config.toml found. "
+                "Make sure entrypoint.sh has run before starting the server."
+            )
+
+        with config_path.open("rb") as fh:
+            raw = tomllib.load(fh)
+
+        base = {k: v for k, v in raw.get("llm", {}).items() if not isinstance(v, dict)}
+
+        if config_name == "default":
+            return base
+
+        override = raw.get("llm", {}).get(config_name, {})
+        return {**base, **override}
+
+    async def chat(self, message: str, system_prompt: Optional[str] = None) -> str:
+        """Send *message* to the configured LLM and return the text reply."""
+        messages = [
+            {
+                "role": "system",
+                "content": system_prompt or self._DEFAULT_SYSTEM_PROMPT,
+            },
+            {"role": "user", "content": message},
+        ]
+        response = await self.client.chat.completions.create(
+            model=self.model,
+            messages=messages,
+            max_tokens=self.max_tokens,
+            temperature=self.temperature,
+        )
+        return response.choices[0].message.content or ""
 
 
-async def get_agent():
-    """Get or create the Manus agent instance."""
-    global _agent
-    if _agent is None:
-        try:
-            from app.agent.manus import Manus
-            _agent = await Manus.create()
-            logger.info("Manus agent initialized successfully")
-        except Exception as e:
-            logger.error(f"Failed to initialize Manus agent: {e}")
-            raise
-    return _agent
+# Module-level singleton — created once on first request
+_simple_agent: Optional[SimpleLLMAgent] = None
+
+
+def get_simple_agent() -> SimpleLLMAgent:
+    """Return (and lazily create) the module-level SimpleLLMAgent."""
+    global _simple_agent
+    if _simple_agent is None:
+        _simple_agent = SimpleLLMAgent(config_name="default")
+        logger.info(
+            "SimpleLLMAgent initialised (model=%s, base_url=%s)",
+            _simple_agent.model,
+            _simple_agent.base_url,
+        )
+    return _simple_agent
 
 
 @app.get("/health")
@@ -40,7 +125,7 @@ async def health():
     """Health check endpoint - responds immediately"""
     return JSONResponse(
         status_code=200,
-        content={"status": "ok", "agent_ready": _agent is not None}
+        content={"status": "ok", "agent_ready": _simple_agent is not None}
     )
 
 @app.get("/")
@@ -61,10 +146,10 @@ async def status():
         content={
             "service": "OpenManus",
             "status": "online",
-            "agent_initialized": _agent is not None,
+            "agent_initialized": _simple_agent is not None,
             "environment": {
-                "has_gemini_key": bool(os.getenv("Gemini API Key")),
-                "has_wasabi_config": bool(os.getenv("WASABI_BUCKET"))
+                "has_gemini_key": bool(os.getenv("GEMINI_API_KEY")),
+                "has_claude_key": bool(os.getenv("CLAUDE_API_KEY")),
             }
         }
     )
@@ -75,24 +160,11 @@ async def chat(
     files: Optional[List[UploadFile]] = File(default=None),
 ):
     """
-    General-purpose interaction endpoint for OpenManus.
+    Chat endpoint for OpenManus.
 
-    Accepts a user message and optional file attachments, runs the Manus agent,
-    and returns the response in a chat-friendly format.
+    Accepts a user message and optional file attachments, calls the configured
+    LLM directly via SimpleLLMAgent, and returns the response.
     """
-    try:
-        agent = await get_agent()
-    except Exception as e:
-        logger.error(f"Agent initialization failed: {e}")
-        return JSONResponse(
-            status_code=503,
-            content={
-                "status": "error",
-                "message": "OpenManus agent is not available. Please check the server configuration.",
-                "error": str(e),
-            },
-        )
-
     # Build the prompt, appending file context when files are provided
     prompt_parts = [message.strip()]
 
@@ -106,7 +178,7 @@ async def chat(
                 mime = upload.content_type or mimetypes.guess_type(upload.filename)[0] or "application/octet-stream"
                 size_kb = len(raw) / 1024
 
-                # For images, embed as base64 so the agent can reference them
+                # For images, embed as base64 so the LLM can reference them
                 if mime.startswith("image/"):
                     b64 = base64.b64encode(raw).decode("utf-8")
                     file_descriptions.append(
@@ -136,16 +208,12 @@ async def chat(
     full_prompt = "\n".join(prompt_parts)
 
     try:
-        logger.info(f"Running Manus agent with prompt: {full_prompt[:200]}...")
+        agent = get_simple_agent()
+        logger.info("Running SimpleLLMAgent with prompt: %s...", full_prompt[:200])
 
-        # Reset agent state for a fresh run on each request
-        from app.schema import AgentState
-        agent.state = AgentState.IDLE
-        agent.current_step = 0
+        result = await agent.chat(full_prompt)
 
-        result = await agent.run(full_prompt)
-
-        logger.info("Manus agent completed successfully")
+        logger.info("SimpleLLMAgent completed successfully")
         return JSONResponse(
             status_code=200,
             content={
@@ -156,7 +224,7 @@ async def chat(
             },
         )
     except Exception as e:
-        logger.error(f"Agent execution error: {e}", exc_info=True)
+        logger.error("Agent execution error: %s", e, exc_info=True)
         return JSONResponse(
             status_code=500,
             content={
