@@ -10,4 +10,6 @@ COPY . .
 
 RUN uv pip install --system -r requirements.txt
 
-CMD ["python", "-m", "uvicorn", "api:app", "--host", "0.0.0.0", "--port", "8000"]
+RUN chmod +x entrypoint.sh
+
+ENTRYPOINT ["./entrypoint.sh"]
